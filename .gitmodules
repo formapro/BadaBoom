@@ -3,4 +3,4 @@
 	url = https://github.com/symfony/ClassLoader.git
 [submodule "vendor/FormaPro/UniversalErrorCatcher"]
 	path = vendor/FormaPro/UniversalErrorCatcher
-	url = https://github.com/formapro/universal-error-catcher.git
+	url = https://github.com/formapro/UniversalErrorCatcher.git
