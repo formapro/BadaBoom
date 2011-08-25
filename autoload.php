@@ -6,8 +6,8 @@ use Symfony\Component\ClassLoader\UniversalClassLoader;
 
 $loader = new UniversalClassLoader();
 $loader->registerNamespaces(array(
-    'BadaBoom\Tests'                => __DIR__.'/tests/BadaBoom',
-    'BadaBoom'                      => __DIR__.'/lib',
+    'BadaBoom\Tests' => __DIR__.'/tests/BadaBoom',
+    'BadaBoom'       => __DIR__.'/src',
     'Symfony'        => __DIR__.'/vendor',
     
 ));
