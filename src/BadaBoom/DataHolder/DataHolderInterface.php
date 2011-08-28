@@ -5,7 +5,6 @@ namespace BadaBoom\DataHolder;
 /**
  *
  * @package    BadaBoom
- * 
  * @author     Maksim Kotlyar <mkotlar@ukr.net>
  */
 interface DataHolderInterface extends \IteratorAggregate
