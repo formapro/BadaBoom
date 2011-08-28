@@ -12,8 +12,8 @@ class AbstractChainNodeTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldImplementChainNodeInterface()
     {
-        $rc = new \ReflectionClass('BadaBoom\\ChainNode\\AbstractChainNode');
-        $this->assertTrue($rc->implementsInterface('BadaBoom\\ChainNode\\ChainNodeInterface'));
+        $rc = new \ReflectionClass('BadaBoom\ChainNode\AbstractChainNode');
+        $this->assertTrue($rc->implementsInterface('BadaBoom\ChainNode\ChainNodeInterface'));
     }
 
     /**
@@ -68,6 +68,6 @@ class AbstractChainNodeTest extends \PHPUnit_Framework_TestCase
 
     protected function createMockChainNode()
     {
-        return $this->getMockForAbstractClass('BadaBoom\\ChainNode\\AbstractChainNode');
+        return $this->getMockForAbstractClass('BadaBoom\ChainNode\AbstractChainNode');
     }
 }
