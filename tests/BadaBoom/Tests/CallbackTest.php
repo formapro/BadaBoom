@@ -12,8 +12,7 @@ class CallbackTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldTakeChainNodeInConstructor()
     {
-        $chain = $this->createMockChainNode();
-        $callback = new Callback($chain);
+        new Callback($this->createMockChainNode());
     }
 
     /**
