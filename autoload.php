@@ -9,9 +9,6 @@ $loader->registerNamespaces(array(
     'BadaBoom\Tests' => __DIR__.'/tests/BadaBoom',
     'BadaBoom'       => __DIR__.'/src',
     'Symfony'        => __DIR__.'/vendor',
-    
 ));
-$loader->registerPrefixes(array(
-    'UniversalErrorCatcher_' => __DIR__.'/vendor/FormaPro/UniversalErrorCatcher/src'
-));
+
 $loader->register();
