@@ -10,6 +10,16 @@ class AbstractChainNodeTest extends \PHPUnit_Framework_TestCase
      *
      * @test
      */
+    public function shouldNotBeInstantiable()
+    {
+        $rc = new \ReflectionClass('BadaBoom\ChainNode\AbstractChainNode');
+        $this->assertFalse($rc->isInstantiable());
+    }
+
+    /**
+     *
+     * @test
+     */
     public function shouldImplementChainNodeInterface()
     {
         $rc = new \ReflectionClass('BadaBoom\ChainNode\AbstractChainNode');
