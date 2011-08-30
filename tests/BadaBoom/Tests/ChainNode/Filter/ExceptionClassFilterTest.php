@@ -11,6 +11,6 @@ class ExceptionClassFilterTest extends \PHPUnit_Framework_TestCase
     public function shouldImplementChainNodeInterface()
     {
         $rc = new \ReflectionClass('BadaBoom\ChainNode\Filter\ExceptionClassFilter');
-        $this->assertTrue($rc->implementsInterface('BadaBoom\ChainNode\ChainNodeInterface'));
+        $this->assertTrue($rc->isSubclassOf('BadaBoom\ChainNode\Filter\AbstractFilterChainNode'));
     }
 }

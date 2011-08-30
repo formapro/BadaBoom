@@ -2,13 +2,11 @@
 
 namespace BadaBoom\ChainNode\Filter;
 
-use BadaBoom\ChainNode\AbstractChainNode;
 use BadaBoom\DataHolder\DataHolderInterface;
 
-class ExceptionClassFilter extends AbstractChainNode
+class ExceptionClassFilter extends AbstractFilterChainNode
 {
-    public function handle(DataHolderInterface $data)
+    public function filter(DataHolderInterface $data)
     {
-
     }
 }
