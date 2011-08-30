@@ -4,12 +4,12 @@ namespace BadaBoom\ChainNode\Sender;
 
 use BadaBoom\ChainNode\AbstractChainNode;
 use BadaBoom\DataHolder\DataHolderInterface;
-use BadaBoom\ChainNode\Sender\SenderAdapterInterface;
+use BadaBoom\Adapter\AdapterInterface;
 
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Serializer\SerializerAwareInterface;
 
-class Sender extends AbstractChainNode
+abstract class AbstractSender extends AbstractChainNode
 {
     /**
      * @var SerializerInterface
@@ -23,10 +23,11 @@ class Sender extends AbstractChainNode
 
     /**
      *
-     * @param SenderAdapterInterface $adapter
-     * @param \Symfony\Component\Serializer\SerializerInterface $serializer
+     * @param AdapterInterface $adapter
+     * @param SerializerInterface $serializer
+     * @param array $parameters
      */
-    public function __construct(SenderAdapterInterface $adapter, SerializerInterface $serializer)
+    public function __construct(AdapterInterface $adapter, SerializerInterface $serializer, array $parameters = array())
     {
         $this->serializer = $serializer;
     }
@@ -36,7 +37,7 @@ class Sender extends AbstractChainNode
      * @param \BadaBoom\DataHolder\DataHolderInterface $data
      * @return void
      */
-    public function handle(DataHolderInterface $data)
+    public function serialize(DataHolderInterface $data)
     {
         $this->serializer->serialize($data, $this->format);
     }

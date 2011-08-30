@@ -3,9 +3,8 @@
 namespace BadaBoom\Tests\ChainNode\Sender;
 
 use BadaBoom\DataHolder\DataHolder;
-use BadaBoom\ChainNode\Sender\Sender;
 
-class SenderTestCase extends \PHPUnit_Framework_TestCase
+class AbstractSenderTestCase extends \PHPUnit_Framework_TestCase
 {
     /**
      * 
@@ -13,17 +12,19 @@ class SenderTestCase extends \PHPUnit_Framework_TestCase
      */
     public function shouldBeExtendedByAbstractChainNode()
     {
-        $rc = new \ReflectionClass('BadaBoom\ChainNode\Sender\Sender');
+        $rc = new \ReflectionClass('BadaBoom\ChainNode\Sender\AbstractSender');
         $this->assertTrue($rc->isSubclassOf('BadaBoom\ChainNode\AbstractChainNode'));
     }
 
     /**
+     *
      * 
      * @test
      */
     public function shouldTakeAdapterAndSerializerInConstructor()
     {
-        new Sender($this->createMockAdapter(), $this->createMockSerializer());
+        $class = $this->getMockedAbstractSenderClass();
+        new $class($this->createMockAdapter(), $this->createMockSerializer());
     }
 
     /**
@@ -40,7 +41,8 @@ class SenderTestCase extends \PHPUnit_Framework_TestCase
             ->will($this->returnValue(true))
         ;
 
-        $sender = new Sender($this->createMockAdapter(), $serializer);
+        $class = $this->getMockedAbstractSenderClass();
+        $sender = new $class($this->createMockAdapter(), $serializer);
         $sender->setFormat($format);
     }
 
@@ -60,7 +62,8 @@ class SenderTestCase extends \PHPUnit_Framework_TestCase
             ->will($this->returnValue(false))
         ;
 
-        $sender = new Sender($this->createMockAdapter(), $serializer);
+        $class = $this->getMockedAbstractSenderClass();
+        $sender = new $class($this->createMockAdapter(), $serializer);
         $sender->setFormat('fake');
     }
 
@@ -68,7 +71,7 @@ class SenderTestCase extends \PHPUnit_Framework_TestCase
      * 
      * @test
      */
-    public function shouldSerializeDataToSetFormatBeforeSend()
+    public function shouldSerializeDataToSetFormat()
     {
         $format = 'html';
         $data = new DataHolder();
@@ -84,19 +87,11 @@ class SenderTestCase extends \PHPUnit_Framework_TestCase
             ->with($data, $format)
         ;
 
-        $sender = new Sender($this->createMockAdapter(), $serializer);
+        $class = $this->getMockedAbstractSenderClass();
+        $sender = new $class($this->createMockAdapter(), $serializer);
         $sender->setFormat($format);
         
-        $sender->handle($data);
-    }
-
-    /**
-     * 
-     * @test
-     */
-    public function shouldSendSerializedDataViaAdapter()
-    {
-
+        $sender->serialize($data);
     }
 
     /**
@@ -105,7 +100,7 @@ class SenderTestCase extends \PHPUnit_Framework_TestCase
      */
     protected function createMockAdapter()
     {
-        return $this->getMock('BadaBoom\ChainNode\Sender\SenderAdapterInterface');
+        return $this->getMock('BadaBoom\Adapter\AdapterInterface');
     }
 
     /**
@@ -115,5 +110,26 @@ class SenderTestCase extends \PHPUnit_Framework_TestCase
     protected function createMockSerializer()
     {
         return $this->getMock('Symfony\Component\Serializer\SerializerInterface');
+    }
+
+    /**
+     *
+     * @param $adapter
+     * @param $serializer
+     * @return AdapterSender
+     */
+    protected function createSender($adapter, $serializer)
+    {
+        $class = $this->getMockedAbstractSenderClass();
+        return new $class($adapter, $serializer);
+    }
+
+    /**
+     *
+     * @return string
+     */
+    protected function getMockedAbstractSenderClass()
+    {
+        return $this->getMockClass('BadaBoom\ChainNode\Sender\AbstractSender', array('handle'));
     }
 }
