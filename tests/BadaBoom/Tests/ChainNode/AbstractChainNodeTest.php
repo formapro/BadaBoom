@@ -76,6 +76,9 @@ class AbstractChainNodeTest extends \PHPUnit_Framework_TestCase
         $this->createMockChainNode()->handleNextNode(new DataHolder);
     }
 
+    /**
+     * @return \PHPUnit_Framework_MockObject_MockObject
+     */
     protected function createMockChainNode()
     {
         return $this->getMockForAbstractClass('BadaBoom\ChainNode\AbstractChainNode');

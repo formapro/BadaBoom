@@ -7,7 +7,6 @@ use BadaBoom\DataHolder\DataHolderInterface;
 use BadaBoom\Adapter\AdapterInterface;
 
 use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Serializer\SerializerAwareInterface;
 
 abstract class AbstractSender extends AbstractChainNode
 {
@@ -17,9 +16,11 @@ abstract class AbstractSender extends AbstractChainNode
     protected $serializer;
 
     /**
-     * @var string
+     * @var DataHolderInterface
      */
-    protected $format;
+    protected $configuration;
+
+
 
     /**
      *
@@ -27,34 +28,25 @@ abstract class AbstractSender extends AbstractChainNode
      * @param SerializerInterface $serializer
      * @param array $parameters
      */
-    public function __construct(AdapterInterface $adapter, SerializerInterface $serializer, array $parameters = array())
+    public function __construct(AdapterInterface $adapter, SerializerInterface $serializer, DataHolderInterface $configuration)
     {
+        if (false == $serializer->supportsSerialization($configuration->get('format'))) {
+            throw new \InvalidArgumentException(sprintf(
+                'Given format "%s" is not supported by serializer',
+                $configuration->get('format')
+            ));
+        }
         $this->serializer = $serializer;
+        $this->configuration = $configuration;
     }
 
     /**
      *
-     * @param \BadaBoom\DataHolder\DataHolderInterface $data
+     * @param DataHolderInterface $data
      * @return void
      */
     public function serialize(DataHolderInterface $data)
     {
-        $this->serializer->serialize($data, $this->format);
-    }
-
-    /**
-     *
-     * @throws \InvalidArgumentException
-     * @param string $format
-     * @return Sender
-     */
-    public function setFormat($format)
-    {
-        if (false == $this->serializer->supportsSerialization($format)) {
-            throw new \InvalidArgumentException('Given format "%s" is not supported by serializer');
-        }
-        $this->format = $format;
-
-        return $this;
+        $this->serializer->serialize($data, $this->configuration->get('format'));
     }
 }
