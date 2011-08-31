@@ -26,4 +26,12 @@ interface DataHolderInterface extends \IteratorAggregate
      * @return mixed
      */
     public function get($name);
+
+    /**
+     *
+     * @param string
+     *
+     * @return boolean
+     */
+    public function has($name);
 }

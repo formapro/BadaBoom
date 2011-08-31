@@ -33,6 +33,15 @@ class DataHolder implements DataHolderInterface
     {
         return isset($this->data[$name]) ? $this->data[$name] : null;
     }
+    
+    /**
+     *
+     * {@inheritdoc}
+     */
+    public function has($name)
+    {
+        return \array_key_exists($name, $this->data);
+    }
 
     /**
      *
