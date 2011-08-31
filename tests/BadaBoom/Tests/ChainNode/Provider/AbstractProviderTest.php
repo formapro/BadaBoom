@@ -2,7 +2,7 @@
 
 namespace BadaBoom\Tests\ChainNode\Provider;
 
-class AbstractChainNodeTest extends \PHPUnit_Framework_TestCase
+class AbstractProviderTest extends \PHPUnit_Framework_TestCase
 {
     /**
      *
@@ -10,7 +10,7 @@ class AbstractChainNodeTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldNotBeInstantiable()
     {
-        $rc = new \ReflectionClass('BadaBoom\ChainNode\Provider\AbstractProviderChainNode');
+        $rc = new \ReflectionClass('BadaBoom\ChainNode\Provider\AbstractProvider');
         $this->assertFalse($rc->isInstantiable());
     }
 }
