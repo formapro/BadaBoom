@@ -33,6 +33,23 @@ class DataHolderTest extends \PHPUnit_Framework_TestCase
      *
      * @test
      *
+     * @depends shouldImplementDataHolderInterface
+     */
+    public function shouldAllowToFindOutWhetherValueSetOrNot()
+    {
+        $holder = new DataHolder();
+
+        $this->assertFalse($holder->has('foo'));
+        
+        $holder->set('foo', 'bar');
+
+        $this->assertTrue($holder->has('foo'));
+    }
+
+    /**
+     *
+     * @test
+     *
      * @depends shouldAllowToSetValueWithName
      */
     public function shouldAllowToGetPreviouslySetValueByName()
