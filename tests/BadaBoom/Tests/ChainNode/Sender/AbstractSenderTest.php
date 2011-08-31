@@ -17,23 +17,13 @@ class AbstractSenderTestCase extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     *
      * 
      * @test
      */
-    public function shouldTakeAdapterAndSerializerInConstructor()
-    {
-        $class = $this->getMockedAbstractSenderClass();
-        new $class($this->createMockAdapter(), $this->createMockSerializer());
-    }
-
-    /**
-     * 
-     * @test
-     */
-    public function shouldAllowToSetFormatSupportedBySerializer()
+    public function shouldCheckGivenFormatIntoConstructor()
     {
         $format = 'html';
+        
         $serializer = $this->createMockSerializer();
         $serializer->expects($this->once())
             ->method('supportsSerialization')
@@ -41,9 +31,10 @@ class AbstractSenderTestCase extends \PHPUnit_Framework_TestCase
             ->will($this->returnValue(true))
         ;
 
-        $class = $this->getMockedAbstractSenderClass();
-        $sender = new $class($this->createMockAdapter(), $serializer);
-        $sender->setFormat($format);
+        $configuration = new DataHolder();
+        $configuration->set('format', $format);
+
+        $this->createSender($this->createMockAdapter(), $serializer, $configuration);
     }
 
     /**
@@ -52,7 +43,7 @@ class AbstractSenderTestCase extends \PHPUnit_Framework_TestCase
      * @expectedException \InvalidArgumentException
      * @expectedExceptionMessage is not supported by serializer
      */
-    public function throwExceptionWhenTrySetUnsupportedFormat()
+    public function throwExceptionWhenTryConstructWithUnsupportedSerializeFormat()
     {
         $format = 'fake';
         $serializer = $this->createMockSerializer();
@@ -62,19 +53,20 @@ class AbstractSenderTestCase extends \PHPUnit_Framework_TestCase
             ->will($this->returnValue(false))
         ;
 
-        $class = $this->getMockedAbstractSenderClass();
-        $sender = new $class($this->createMockAdapter(), $serializer);
-        $sender->setFormat('fake');
+        $configuration = new DataHolder();
+        $configuration->set('format', $format);
+
+        $this->createSender($this->createMockAdapter(), $serializer, $configuration);
     }
 
     /**
      * 
      * @test
      */
-    public function shouldSerializeDataToSetFormat()
+    public function shouldSerializeDataToSetFormatInConfiguration()
     {
-        $format = 'html';
         $data = new DataHolder();
+        $format = 'html';
 
         $serializer = $this->createMockSerializer();
         $serializer->expects($this->once())
@@ -86,10 +78,10 @@ class AbstractSenderTestCase extends \PHPUnit_Framework_TestCase
             ->method('serialize')
             ->with($data, $format)
         ;
+        $configuration = new DataHolder();
+        $configuration->set('format', $format);
 
-        $class = $this->getMockedAbstractSenderClass();
-        $sender = new $class($this->createMockAdapter(), $serializer);
-        $sender->setFormat($format);
+        $sender = $this->createSender($this->createMockAdapter(), $serializer, $configuration);
         
         $sender->serialize($data);
     }
@@ -113,22 +105,22 @@ class AbstractSenderTestCase extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     *
      * @param $adapter
      * @param $serializer
-     * @return AdapterSender
+     * @param $configuration
+     * @return AbstractSender
      */
-    protected function createSender($adapter, $serializer)
+    protected function createSender($adapter, $serializer, $configuration)
     {
-        $class = $this->getMockedAbstractSenderClass();
-        return new $class($adapter, $serializer);
+        $class = $this->getSenderClass();
+        return new $class($adapter, $serializer, $configuration);
     }
 
     /**
      *
      * @return string
      */
-    protected function getMockedAbstractSenderClass()
+    protected function getSenderClass()
     {
         return $this->getMockClass('BadaBoom\ChainNode\Sender\AbstractSender', array('handle'));
     }
