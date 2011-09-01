@@ -12,7 +12,7 @@ abstract class AbstractFilterChainNode extends AbstractChainNode
         $e = $data->get('exception');
         if ($e instanceof \Exception) {
             if ($this->filter($e)) {
-                $this->handleNextNode($data->get('exception'));
+                $this->handleNextNode($data);
             }
         }
     }
