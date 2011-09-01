@@ -9,12 +9,13 @@ abstract class AbstractFilterChainNode extends AbstractChainNode
 {
     public function handle(DataHolderInterface $data)
     {
-        if ($data->get('exception') instanceof \Exception) {
-            if ($this->filter($data)) {
-                $this->handleNextNode($data);
+        $e = $data->get('exception');
+        if ($e instanceof \Exception) {
+            if ($this->filter($e)) {
+                $this->handleNextNode($data->get('exception'));
             }
         }
     }
 
-    abstract public function filter(DataHolderInterface $data);
+    abstract public function filter(\Exception $exception);
 }

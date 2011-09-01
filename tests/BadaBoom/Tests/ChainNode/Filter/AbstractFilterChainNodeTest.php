@@ -24,7 +24,7 @@ class AbstractFilterChainNodeTest extends \PHPUnit_Framework_TestCase
     {
         $filter = $this->createMockChainFilter();
 
-        $filter->filter(new DataHolder);
+        $filter->filter(new \Exception());
     }
 
     /**
@@ -48,11 +48,13 @@ class AbstractFilterChainNodeTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldProxyDataFromHandleToFilter()
     {
+        $e = new \Exception('foo');
+
         $data = new DataHolder();
-        $data->set('exception', new \Exception('foo'));
+        $data->set('exception', $e);
 
         $filter = $this->createMockChainFilter();
-        $filter->expects($this->once())->method('filter')->with($this->equalTo($data));
+        $filter->expects($this->once())->method('filter')->with($this->equalTo($e));
 
         $filter->handle($data);
     }
@@ -73,7 +75,7 @@ class AbstractFilterChainNodeTest extends \PHPUnit_Framework_TestCase
      *
      * @test
      */
-    public function shouldHandleNextNodeIfFilterationPassed()
+    public function shouldHandleNextNodeIfFiltrationPassed()
     {
         $data = new DataHolder();
         $data->set('exception', new \Exception('foo'));
@@ -93,7 +95,7 @@ class AbstractFilterChainNodeTest extends \PHPUnit_Framework_TestCase
      *
      * @test
      */
-    public function shouldNotHandleNextNodeIfFilterationNotPassed()
+    public function shouldNotHandleNextNodeIfFiltrationNotPassed()
     {
         $data = new DataHolder();
         $data->set('exception', new \Exception('foo'));
