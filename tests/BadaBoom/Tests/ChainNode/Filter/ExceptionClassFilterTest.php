@@ -111,12 +111,14 @@ class ExceptionClassFilterTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldDenyByDefault()
     {
+        $e = new \Exception;
+
         $data = new DataHolder();
-        $data->set('exception', new \Exception);
+        $data->set('exception', $e);
 
         $filter = new ExceptionClassFilter();
 
-        $this->assertFalse($filter->filter($data));
+        $this->assertFalse($filter->filter($e));
     }
 
     /**
@@ -127,8 +129,7 @@ class ExceptionClassFilterTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldWorkAsExpected($exceptionClass, $expectedResult, $failMessage)
     {
-        $data = new DataHolder();
-        $data->set('exception', new $exceptionClass);
+        $exception = new $exceptionClass;
 
         $filter = new ExceptionClassFilter();
 
@@ -137,7 +138,27 @@ class ExceptionClassFilterTest extends \PHPUnit_Framework_TestCase
         $filter->allow('InvalidArgumentException');
         $filter->deny('BadFunctionCallException');
 
-        $this->assertEquals($expectedResult, $filter->filter($data), $failMessage);
+        $this->assertEquals($expectedResult, $filter->filter($exception), $failMessage);
+    }
+
+    /**
+     *
+     * @test
+     *
+     * @dataProvider provideFilterCases
+     */
+    public function shouldNotDependsOnRulesOrder($exceptionClass, $expectedResult, $failMessage)
+    {
+        $exception = new $exceptionClass;
+
+        $filter = new ExceptionClassFilter();
+
+        $filter->deny('BadFunctionCallException');
+        $filter->allow('InvalidArgumentException');
+        $filter->deny('LogicException');
+        $filter->allow('Exception');
+
+        $this->assertEquals($expectedResult, $filter->filter($exception), $failMessage);
     }
 
     /**
@@ -146,14 +167,16 @@ class ExceptionClassFilterTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldRewriteRule()
     {
+        $e = new \Exception;
+
         $data = new DataHolder();
-        $data->set('exception', new \Exception);
+        $data->set('exception', $e);
 
         $filter = new ExceptionClassFilter();
 
         $filter->deny('Exception');
         $filter->allow('Exception');
 
-        $this->assertTrue($filter->filter($data));
+        $this->assertTrue($filter->filter($e));
     }
 }

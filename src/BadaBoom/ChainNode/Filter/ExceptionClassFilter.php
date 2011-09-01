@@ -32,12 +32,21 @@ class ExceptionClassFilter extends AbstractFilterChainNode
         $this->rules[$exceptionClass] = $rule;
     }
 
-    public function filter(DataHolderInterface $data)
+    public function filter(\Exception $e)
     {
-        $e = $data->get('exception');
-        foreach (\array_reverse($this->rules) as $exceptionClass => $rule) {
-            if ($e instanceof $exceptionClass) {
-                return $rule;
+        $caughtExceptionClass = get_class($e);
+        while ($caughtExceptionClass) {
+            foreach ($this->rules as $exceptionClass => $rule) {
+                if ($caughtExceptionClass === $exceptionClass) {
+                    return $rule;
+                }
+            }
+
+            $rc = new \ReflectionClass($caughtExceptionClass);
+            if ($prc = $rc->getParentClass()) {
+                $caughtExceptionClass = $prc->getName();
+            } else {
+                $caughtExceptionClass = null;
             }
         }
 
