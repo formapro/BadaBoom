@@ -2,9 +2,9 @@
 
 namespace BadaBoom\Adapter\Cache;
 
-class ArrayCache implements CacheAdapterInterface
+class ArrayCacheAdapter implements CacheAdapterInterface
 {
-    protected $data;
+    protected $data = array();
 
     /**
      *
@@ -41,6 +41,6 @@ class ArrayCache implements CacheAdapterInterface
      */
     public function delete($id)
     {
-        unset($this->data);
+        unset($this->data[$id]);
     }
 }

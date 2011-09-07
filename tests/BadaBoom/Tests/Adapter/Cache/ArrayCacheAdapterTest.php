@@ -2,9 +2,9 @@
 
 namespace BadaBoom\Tests\Adapter\Cache;
 
-use BadaBoom\Adapter\Cache\ArrayCache;
+use BadaBoom\Adapter\Cache\ArrayCacheAdapter;
 
-class ArrayCacheTest extends \PHPUnit_Framework_TestCase
+class ArrayCacheAdapterTest extends \PHPUnit_Framework_TestCase
 {
     /**
      *
@@ -12,7 +12,7 @@ class ArrayCacheTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldImplementCacheAdapterInterface()
     {
-        $rc = new \ReflectionClass('BadaBoom\Adapter\Cache\ArrayCache');
+        $rc = new \ReflectionClass('BadaBoom\Adapter\Cache\ArrayCacheAdapter');
         $this->assertTrue($rc->isSubclassOf('BadaBoom\Adapter\Cache\CacheAdapterInterface'));
     }
 
@@ -21,7 +21,7 @@ class ArrayCacheTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldAllowToSaveDataToCache()
     {
-        $cache = new ArrayCache;
+        $cache = new ArrayCacheAdapter;
         $cache->save('foo-id', 'bar-data', 23);
     }
 
@@ -30,7 +30,7 @@ class ArrayCacheTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldAllowToCheckWhetherCacheContainsData()
     {
-        $cache = new ArrayCache;
+        $cache = new ArrayCacheAdapter;
         $cache->save('foo-id', 'bar-data', 2000);
 
         $this->assertTrue($cache->contains('foo-id'));
@@ -43,7 +43,7 @@ class ArrayCacheTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldNotContainsDataIfItIsExpired()
     {
-        $cache = new ArrayCache;
+        $cache = new ArrayCacheAdapter;
         $cache->save('foo-id', 'bar-data', 2);
 
         $this->assertTrue($cache->contains('foo-id'));
@@ -57,7 +57,7 @@ class ArrayCacheTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldAllowToFetchCachedData()
     {
-        $cache = new ArrayCache;
+        $cache = new ArrayCacheAdapter;
         $cache->save('foo-id', 'bar-data', 2000);
 
         $this->assertEquals('bar-data', $cache->fetch('foo-id'));
@@ -69,7 +69,7 @@ class ArrayCacheTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldReturnNullIfDataNotExistInCache()
     {
-        $cache = new ArrayCache;
+        $cache = new ArrayCacheAdapter;
 
         $this->assertNull($cache->fetch('foo-id'));
     }
@@ -80,14 +80,17 @@ class ArrayCacheTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldAllowToDeleteCachedData()
     {
-        $cache = new ArrayCache;
+        $cache = new ArrayCacheAdapter;
 
         $cache->save('foo-id', 'bar-data', 2000);
+        $cache->save('ololo', 'ololo', 2000);
 
         $this->assertTrue($cache->contains('foo-id'));
+        $this->assertTrue($cache->contains('ololo'));
 
         $cache->delete('foo-id');
 
         $this->assertFalse($cache->contains('foo-id'));
+        $this->assertTrue($cache->contains('ololo'));
     }
 }
