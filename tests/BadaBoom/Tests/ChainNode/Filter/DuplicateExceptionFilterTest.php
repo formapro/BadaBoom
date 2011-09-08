@@ -23,49 +23,110 @@ class DuplicateExceptionFilterTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldRequireCacheAdapterAndLifeTimeProvidedInConstructor()
     {
-        new DuplicateExceptionFilter(new ArrayCacheAdapter, 2000);
+        $cache = $this->createCacheAdapter();
+
+        new DuplicateExceptionFilter($cache, 2000);
+    }
+
+    /**
+     *
+     * @test
+     */
+    public function shouldGenerateCacheIdForException()
+    {
+        $filter = new DuplicateExceptionFilter($this->createCacheAdapter(), 2000);
+
+        $id = $filter->generateCacheId(new \Exception('foo'));
+
+        $this->assertInternalType('string', $id);
+        $this->assertEquals(32, strlen($id));
     }
 
     /**
      * 
      * @test
      */
-    public function shouldPassIfExceptionComesFirstTime()
+    public function shouldGenerateSameCacheIdAsExpected()
     {
-        $filter = new DuplicateExceptionFilter(new ArrayCacheAdapter, 2000);
+        $e = new \Exception('foo');
+        $filter = new DuplicateExceptionFilter($this->createCacheAdapter(), 2000);
 
-        $this->assertTrue($filter->filter(new \Exception('foo')));
+        $expectedCacheId = md5(get_class($e) . $e->getFile() . $e->getLine());
+        $actualCacheId = $filter->generateCacheId($e);
+
+        $this->assertEquals($expectedCacheId, $actualCacheId);
+    }
+
+    /**
+     * 
+     * @test
+     */
+    public function shouldFilterIfExceptionAlreadyInCache()
+    {
+        $e = new \Exception('foo');
+        $cache = $this->createCacheAdapter();
+        $filter = new DuplicateExceptionFilter($cache, 2000);
+
+        $cacheId = $filter->generateCacheId($e);
+        $cache
+            ->expects($this->once())
+            ->method('contains')
+            ->with($this->equalTo($cacheId))
+            ->will($this->returnValue(true));
+
+
+        $this->assertFalse($filter->filter($e));
+    }
+
+    /**
+     * 
+     * @test
+     */
+    public function shouldPassIfExceptionNotInCache()
+    {
+        $e = new \Exception('foo');
+        $cache = $this->createCacheAdapter();
+        $filter = new DuplicateExceptionFilter($cache, 2000);
+
+        $cacheId = $filter->generateCacheId($e);
+        $cache
+            ->expects($this->once())
+            ->method('contains')
+            ->with($this->equalTo($cacheId))
+            ->will($this->returnValue(false));
+
+        $this->assertTrue($filter->filter($e));
     }
 
     /**
      *
      * @test
      */
-    public function shouldFilterIfExceptionComesForSecondTime()
+    public function shouldSaveExceptionToTheCacheIfNotInCache()
     {
-        $filter = new DuplicateExceptionFilter(new ArrayCacheAdapter, 2000);
+        $expectedLifeTime = 2000;
 
         $e = new \Exception('foo');
+        $cache = $this->createCacheAdapter();
+
+        $filter = new DuplicateExceptionFilter($cache, $expectedLifeTime);
+
+        $cacheId = $filter->generateCacheId($e);
+
+        $cache
+            ->expects($this->once())
+            ->method('save')
+            ->with($this->equalTo($cacheId), $this->equalTo(1), $this->equalTo($expectedLifeTime));
+        $cache
+            ->expects($this->any())
+            ->method('contains')
+            ->will($this->returnValue(false));
 
         $this->assertTrue($filter->filter($e));
-        $this->assertFalse($filter->filter($e));
     }
 
-    /**
-     *
-     * @test
-     */
-    public function shouldPassIfLifeTimeIsOver()
+    protected function createCacheAdapter()
     {
-        $filter = new DuplicateExceptionFilter(new ArrayCacheAdapter, 1);
-
-        $e = new \Exception('foo');
-
-        $this->assertTrue($filter->filter($e));
-        $this->assertFalse($filter->filter($e));
-
-        sleep(1);
-
-        $this->assertTrue($filter->filter($e));
+        return $this->getMock('BadaBoom\Adapter\Cache\CacheAdapterInterface');
     }
 }
