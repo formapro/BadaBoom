@@ -60,10 +60,10 @@ class FileCacheAdapterTest extends \PHPUnit_Framework_TestCase
     public function shouldNotContainsDataIfItIsExpired()
     {
         $cache = new FileCacheAdapter($this->cacheFile);
-        $cache->save('foo-id', 'bar-data', 2);
+        $cache->save('foo-id', 'bar-data', 1);
 
         $this->assertTrue($cache->contains('foo-id'));
-        sleep(2);
+        sleep(1);
         $this->assertFalse($cache->contains('foo-id'));
     }
 
