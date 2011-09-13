@@ -72,4 +72,28 @@ class ErrorLevelFilterTest extends \PHPUnit_Framework_TestCase
 
         $filter->handle($data);
     }
+
+    /**
+     * 
+     * @test
+     */
+    public function shouldAllowToDefineDeniedErrors()
+    {
+        $filter = new ErrorLevelFilter();
+        $filter->deny(E_WARNING);
+    }
+
+    /**
+     *
+     * @test
+     */
+    public function shouldFilterDeniedErrors()
+    {
+        $e = new \ErrorException('foo', null, E_WARNING);
+
+        $filter = new ErrorLevelFilter();
+        $filter->deny(E_WARNING);
+
+        $this->assertFalse($filter->filter($e));
+    }
 }
