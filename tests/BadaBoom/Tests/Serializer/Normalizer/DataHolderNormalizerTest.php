@@ -18,33 +18,56 @@ class DataHolderNormalizerTest extends \PHPUnit_Framework_TestCase
     {
         return array(
             array(new \stdClass(),  'Should not support normalization of not DataHolder'),
-            array('foo',            'Should not support normalization of not DataHolder'),
-            array(array(),          'Should not support normalization of not DataHolder'),
-            array(123,              'Should not support normalization of not DataHolder'),
+            array('foo',            'Should not support normalization of strings'),
+            array(array(),          'Should not support normalization of arrays'),
+            array(123,              'Should not support normalization of numbers'),
         );
     }
 
     public static function provideNotSupportedDenormalizations()
     {
         return array(
-            array(array('foo'), 'stdClass',                       'Should not support any types of denormalization'),
-            array(array('foo'), 'BadaBoom\DataHolder\DataHolder', 'Should not support any types of denormalization'),
-            array('foo',        'BadaBoom\DataHolder\DataHolder', 'Should not support any types of denormalization'),
-            array(123,          'BadaBoom\DataHolder\DataHolder', 'Should not support any types of denormalization'),
+            array(array('foo'), 'stdClass'),
+            array(array('foo'), 'BadaBoom\DataHolder\DataHolder'),
+            array('foo',        'BadaBoom\DataHolder\DataHolder'),
+            array(123,          'BadaBoom\DataHolder\DataHolder'),
         );
     }
 
     public static function provideNormalizationData()
     {
-        $scalarDataHolder = new DataHolder();
-        $scalarDataHolder->set('foo', 123);
-        $scalarDataHolder->set('bar', 'bar');
-        $scalarDataHolder->set('ololo', 2.3);
-        $scalarArray = array('foo' => 123, 'bar' => 'bar', 'ololo' => 2.3);
+        $noArrayDataHolder = new DataHolder();
+        $noArrayDataHolder->set('foo', 123);
+        $noArrayDataHolder->set('bar', 'bar');
+        $noArrayDataHolder->set('bar2', 2.3);
+        $noArrayDataHolder->set('foo2', new \stdClass());
+        $noArrayDataHolder->set('exception', new \Exception('err'));
+        $expectedNoArray = array();
+
+        $arrayDataHolder = new DataHolder();
+        $arrayDataHolder->set('foo', array());
+        $expectedArray = array('foo' => array());
+
+        $arrayWithScalarsDataHolder = new DataHolder();
+        $arrayWithScalarsDataHolder->set('foo', array('foo' => 'foo', 'bar' => 123));
+        $expectedArrayWithScalars = array('foo' => array('foo' => 'foo', 'bar' => 123));
+
+        $arrayWithObjectDataHolder = new DataHolder();
+        $arrayWithObjectDataHolder->set('foo', array('obj' => new \stdClass()));
+        $expectedArrayWithObject = array('foo' => array('obj' => var_export(new \stdClass(), true)));
+
+        $arrayWithSubArrayDataHolder = new DataHolder();
+        $arrayWithSubArrayDataHolder->set('foo', array('sub' => array('a' => 'b')));
+        $expectedArrayWithSubArray = array('foo' => array('sub' => var_export(array('a' => 'b'), true)));
+
 
         return array(
             array(new DataHolder(), array(), 'An empty DataHolder should be converted to an empty array'),
-            array($scalarDataHolder, $scalarArray, 'Scalar DataHolder should be converted to scalar array'),
+            array($noArrayDataHolder, $expectedNoArray, 'Should ignore any no array values'),
+            array($arrayDataHolder, $expectedArray, 'Should normalize array values'),
+            array($arrayWithScalarsDataHolder, $expectedArrayWithScalars, 'Should do nothing with simple scalar types'),
+            array($arrayWithObjectDataHolder, $expectedArrayWithObject, 'Should do var export on all objects in the array'),
+            array($arrayWithSubArrayDataHolder, $expectedArrayWithSubArray, 'Should do var export on all sub arrays in the array'),
         );
     }
 
@@ -90,11 +113,11 @@ class DataHolderNormalizerTest extends \PHPUnit_Framework_TestCase
      *
      * @dataProvider provideNotSupportedDenormalizations
      */
-    public function shouldNotSupportAnyDenormalizations($data, $type, $failMessage)
+    public function shouldNotSupportAnyDenormalizations($data, $type)
     {
         $normalizer = new DataHolderNormalizer;
 
-        $this->assertFalse($normalizer->supportsDenormalization($data, $type), $failMessage);
+        $this->assertFalse($normalizer->supportsDenormalization($data, $type), 'Should not support any kinds of denormalization');
     }
 
     /**
@@ -106,7 +129,7 @@ class DataHolderNormalizerTest extends \PHPUnit_Framework_TestCase
      * @expectedException Symfony\Component\Serializer\Exception\UnsupportedException
      * @expectedExceptionMessage Denormalization is not supported by this normalizer
      */
-    public function shouldThrowOnDenormalizeCall($data, $type, $failMessage)
+    public function shouldThrowOnDenormalizeCall($data, $type)
     {
         $normalizer = new DataHolderNormalizer;
 

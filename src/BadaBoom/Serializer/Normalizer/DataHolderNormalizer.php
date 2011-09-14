@@ -13,10 +13,23 @@ class DataHolderNormalizer implements NormalizerInterface
     {
         $result = array();
         foreach ($object as $key => $value) {
-            $result[$key] = $value;
+            if (false == is_array($value)) continue;
+
+            $result[$key] = $this->normalizeArray($value);
         }
 
         return $result;
+    }
+
+    protected function normalizeArray(array $data)
+    {
+        array_walk($data, function(&$item) {
+            if (is_object($item) || is_array($item)) {
+                $item = var_export($item, true);
+            }
+        });
+
+        return $data;
     }
 
     public function denormalize($data, $class, $format = null)
