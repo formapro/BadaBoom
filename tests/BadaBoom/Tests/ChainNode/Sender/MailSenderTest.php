@@ -21,24 +21,74 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
      *
      * @test
      * @expectedException \InvalidArgumentException
-     * @expectedExceptionMessage Given recipient
-     * @dataProvider invalidRecipientProvider
+     * @expectedExceptionMessage Given sender
+     * @dataProvider invalidMailProvider
      */
-    public function throwExceptionWhenConstructWithIncorrectRecipient($recipient)
+    public function throwExceptionWhenConstructWithIncorrectSender($sender)
     {
         $configuration = new DataHolder();
-        $configuration->set('to', $recipient);
+        $configuration->set('sender', $sender);
 
         new MailSender($this->createMockAdapter(), $this->createMockSerializer(), $configuration);
     }
 
     /**
-     * 
+     *
+     * @test
+     * @depends throwExceptionWhenConstructWithIncorrectSender
+     * @expectedException \InvalidArgumentException
+     * @expectedExceptionMessage Recipients list should not be empty
+     */
+    public function throwExceptionWhenConstructWithEmptyRecipientsList()
+    {
+        $configuration = new DataHolder();
+        $configuration->set('sender', 'valid@sender.com');
+        $configuration->set('recipients', array());
+
+        new MailSender($this->createMockAdapter(), $this->createMockSerializer(), $configuration);
+    }
+
+    /**
+     *
+     * @test
+     * @depends throwExceptionWhenConstructWithEmptyRecipientsList
+     * @expectedException \InvalidArgumentException
+     * @expectedExceptionMessage Given recipient
+     * @dataProvider invalidMailProvider
+     */
+    public function throwExceptionWhenConstructWithIncorrectRecipientsList($recipient)
+    {
+        $configuration = new DataHolder();
+        $configuration->set('sender', 'valid@sender.com');
+        $configuration->set('recipients', array($recipient));
+
+        new MailSender($this->createMockAdapter(), $this->createMockSerializer(), $configuration);
+    }
+
+    /**
+     *
+     * @test
+     * @depends throwExceptionWhenConstructWithIncorrectRecipientsList
+     * @expectedException \InvalidArgumentException
+     * @expectedExceptionMessage Given recipient
+     * @dataProvider invalidMailProvider
+     */
+    public function throwExceptionWhenConstructWithAnyNumberOfIncorrectRecipients($recipient)
+    {
+        $configuration = new DataHolder();
+        $configuration->set('sender', 'valid@sender.com');
+        $configuration->set('recipients', array('valid@recipient.com', $recipient, 'another_valid@recipient.com'));
+
+        new MailSender($this->createMockAdapter(), $this->createMockSerializer(), $configuration);
+    }
+
+    /**
      * @test
      */
-    public function shouldPassRecipientCheckAndDelegateConstructingToParent()
+    public function shouldPassSenderAndRecipientsCheckAndDelegateConstructingToParent()
     {
-        $to = 'john@doe.com';
+        $sender = 'valid@recipient.com';
+        $recipient = array('john@doe.com');
         $format = 'html';
 
         $serializer = $this->createMockSerializer();
@@ -50,13 +100,103 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
 
         $configuration = new DataHolder();
         $configuration->set('format', $format);
-        $configuration->set('to', $to);
+        $configuration->set('sender', $sender);
+        $configuration->set('recipients', $recipient);
 
         new MailSender($this->createMockAdapter(), $serializer, $configuration);
     }
 
     /**
-     *
+     * @test
+     */
+    public function shouldSendSerializedContentAccordingGivenConfiguration()
+    {
+        $data = new DataHolder();
+        $serializedData = 'Plain text';
+        $configuration = $this->getFullConfiguration();
+
+        $serializer = $this->createMockSerializer();
+        $serializer->expects($this->once())
+            ->method('supportsSerialization')
+            ->with($configuration->get('format'))
+            ->will($this->returnValue(true))
+        ;
+        $serializer->expects($this->once())
+            ->method('serialize')
+            ->with($data, $configuration->get('format'))
+            ->will($this->returnValue($serializedData));
+
+        $adapter = $this->createMockAdapter();
+        $adapter->expects($this->once())
+            ->method('send')
+            ->with(
+                $configuration->get('sender'),
+                $configuration->get('recipients'),
+                $configuration->get('subject'),
+                $serializedData,
+                $configuration->get('headers')
+            )
+        ;
+        $sender = new MailSender($adapter, $serializer, $configuration);
+        $sender->handle($data);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldSendMailAndDelegateHandlingToNextChainNode()
+    {
+        $data = new DataHolder();
+        $serializedData = 'Plain text';
+        $configuration = $this->getFullConfiguration();
+
+        $serializer = $this->createMockSerializer();
+        $serializer->expects($this->once())
+            ->method('supportsSerialization')
+            ->with($configuration->get('format'))
+            ->will($this->returnValue(true))
+        ;
+        $serializer->expects($this->once())
+            ->method('serialize')
+            ->with($data, $configuration->get('format'))
+            ->will($this->returnValue($serializedData));
+
+        $adapter = $this->createMockAdapter();
+        $adapter->expects($this->once())
+            ->method('send')
+            ->with(
+                $configuration->get('sender'),
+                $configuration->get('recipients'),
+                $configuration->get('subject'),
+                $serializedData,
+                $configuration->get('headers')
+            )
+        ;
+
+        $nextChainNode = $this->createMockChainNode();
+        $nextChainNode->expects($this->once())
+            ->method('handle')
+            ->with($this->equalTo($data))
+        ;
+
+        $sender = new MailSender($adapter, $serializer, $configuration);
+        $sender->nextNode($nextChainNode);
+        $sender->handle($data);
+    }
+
+    protected function getFullConfiguration()
+    {
+        $configuration = new DataHolder();
+        $configuration->set('format', 'html');
+        $configuration->set('sender', 'valid@sender.com');
+        $configuration->set('subject', 'It should be provided via SubjectProvider');
+        $configuration->set('recipients', array('john@doe.com'));
+        $configuration->set('headers', array('BB' => 'support@site.com'));
+
+        return $configuration;
+    }
+
+    /**
      * @return \PHPUnit_Framework_MockObject_MockObject
      */
     protected function createMockAdapter()
@@ -77,7 +217,7 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
      * @static
      * @return array
      */
-    public static function invalidRecipientProvider()
+    public static function invalidMailProvider()
     {
         return array(
             array(' '),
@@ -94,5 +234,13 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
             array(new \stdClass),
             array(array()),
         );
+    }
+
+    /**
+     * @return \PHPUnit_Framework_MockObject_MockObject
+     */
+    protected function createMockChainNode()
+    {
+        return $this->getMockForAbstractClass('BadaBoom\ChainNode\AbstractChainNode');
     }
 }

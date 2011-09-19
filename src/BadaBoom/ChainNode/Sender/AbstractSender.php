@@ -11,16 +11,19 @@ use Symfony\Component\Serializer\SerializerInterface;
 abstract class AbstractSender extends AbstractChainNode
 {
     /**
-     * @var SerializerInterface
+     * @var \Symfony\Component\Serializer\SerializerInterface
      */
     protected $serializer;
 
     /**
-     * @var DataHolderInterface
+     * @var \BadaBoom\DataHolder\DataHolderInterface
      */
     protected $configuration;
 
-
+    /**
+     * @var \BadaBoom\ChainNode\Sender\AdapterInterface
+     */
+    protected $adapter;
 
     /**
      *
@@ -38,6 +41,7 @@ abstract class AbstractSender extends AbstractChainNode
         }
         $this->serializer = $serializer;
         $this->configuration = $configuration;
+        $this->adapter = $adapter;
     }
 
     /**
@@ -47,6 +51,6 @@ abstract class AbstractSender extends AbstractChainNode
      */
     public function serialize(DataHolderInterface $data)
     {
-        $this->serializer->serialize($data, $this->configuration->get('format'));
+        return $this->serializer->serialize($data, $this->configuration->get('format'));
     }
 }

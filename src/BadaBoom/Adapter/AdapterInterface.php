@@ -4,5 +4,5 @@ namespace BadaBoom\Adapter;
 
 interface AdapterInterface
 {
-    
+
 }

@@ -33,7 +33,7 @@ class DataHolder implements DataHolderInterface
     {
         return isset($this->data[$name]) ? $this->data[$name] : null;
     }
-    
+
     /**
      *
      * {@inheritdoc}

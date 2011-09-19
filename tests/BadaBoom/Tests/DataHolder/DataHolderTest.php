@@ -40,7 +40,7 @@ class DataHolderTest extends \PHPUnit_Framework_TestCase
         $holder = new DataHolder();
 
         $this->assertFalse($holder->has('foo'));
-        
+
         $holder->set('foo', 'bar');
 
         $this->assertTrue($holder->has('foo'));
@@ -58,7 +58,7 @@ class DataHolderTest extends \PHPUnit_Framework_TestCase
 
         $holder->set('foo', 'bar');
 
-        $this->assertEquals( 'bar', $holder->get('foo'));
+        $this->assertEquals('bar', $holder->get('foo'));
     }
 
     /**

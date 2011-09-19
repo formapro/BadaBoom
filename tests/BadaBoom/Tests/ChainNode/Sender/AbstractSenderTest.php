@@ -7,7 +7,7 @@ use BadaBoom\DataHolder\DataHolder;
 class AbstractSenderTestCase extends \PHPUnit_Framework_TestCase
 {
     /**
-     * 
+     *
      * @test
      */
     public function shouldBeExtendedByAbstractChainNode()
@@ -17,13 +17,13 @@ class AbstractSenderTestCase extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * 
+     *
      * @test
      */
     public function shouldCheckGivenFormatIntoConstructor()
     {
         $format = 'html';
-        
+
         $serializer = $this->createMockSerializer();
         $serializer->expects($this->once())
             ->method('supportsSerialization')
@@ -60,7 +60,7 @@ class AbstractSenderTestCase extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * 
+     *
      * @test
      */
     public function shouldSerializeDataToSetFormatInConfiguration()
@@ -82,12 +82,12 @@ class AbstractSenderTestCase extends \PHPUnit_Framework_TestCase
         $configuration->set('format', $format);
 
         $sender = $this->createSender($this->createMockAdapter(), $serializer, $configuration);
-        
+
         $sender->serialize($data);
     }
 
     /**
-     * 
+     *
      * @return \PHPUnit_Framework_MockObject_MockObject
      */
     protected function createMockAdapter()
@@ -96,7 +96,7 @@ class AbstractSenderTestCase extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * 
+     *
      * @return \PHPUnit_Framework_MockObject_MockObject
      */
     protected function createMockSerializer()
