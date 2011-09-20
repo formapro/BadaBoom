@@ -62,10 +62,23 @@ class DataHolderTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * @test
+     */
+    public function shouldAllowToGetDefaultValueIfValueWasNotSetBefore()
+    {
+        $varName = 'foo';
+        $defaultValue = 'My best default value';
+        $holder = new DataHolder();
+
+        $this->assertFalse($holder->has($varName));
+        $this->assertEquals($defaultValue, $holder->get($varName, $defaultValue));
+    }
+
+    /**
      *
      * @test
      */
-    public function shouldReturnNullIfValueWasNotSetBefore()
+    public function shouldReturnNullIfValueWasNotSetAndDefaultWasNotGiven()
     {
         $holder = new DataHolder();
 
