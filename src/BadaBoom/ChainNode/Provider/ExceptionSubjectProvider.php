@@ -14,7 +14,8 @@ class ExceptionSubjectProvider extends AbstractProvider
     {
         $e = $data->get('exception');
         if(false == empty($e)) {
-            $data->set('subject', sprintf('%s: %s', get_class($e), $e->getMessage()));
+            $rc = new \ReflectionClass($e);
+            $data->set('subject', sprintf('%s: %s', $rc->getShortName(), $e->getMessage()));
         }
 
         return $this->handleNextNode($data);

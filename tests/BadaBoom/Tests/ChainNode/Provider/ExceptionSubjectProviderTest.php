@@ -50,15 +50,17 @@ class ExceptionSubjectProviderTestCase extends \PHPUnit_Framework_TestCase
      */
     public function shouldFillDataHolderWithSubject()
     {
-        $e = new \Exception('foo', 123);
-        $expectedSubject = get_class($e) . ': ' . $e->getMessage();
+        $e = new CustomException('foo', 123);
+        $rc = new \ReflectionClass($e);
+        $expectedSubject = $rc->getShortName() . ': ' . $e->getMessage();
 
         $data = new DataHolder();
         $data->set('exception', $e);
 
         $provider = new ExceptionSubjectProvider();
         $provider->handle($data);
-
         $this->assertEquals($expectedSubject, $data->get('subject'));
     }
 }
+
+class CustomException extends \Exception {}
