@@ -7,11 +7,11 @@ class NativeMailerAdapter implements MailerAdapterInterface
     /**
      * {@inheritdoc}
      */
-    public function send($from, array $to, $subject, $content, array $additionalHeaders = array())
+    public function send($sender, array $recipients, $subject, $content, array $headers = array())
     {
-        $additionalHeaders['from'] = $from;
-        $headers = $this->prepareHeaders($additionalHeaders);
-        foreach($to as $recipient)
+        $headers['from'] = $sender;
+        $headers = $this->prepareHeaders($headers);
+        foreach($recipients as $recipient)
         {
             mail($recipient, $subject, $content, $headers);
         }
@@ -19,6 +19,7 @@ class NativeMailerAdapter implements MailerAdapterInterface
 
     /**
      * @param array $headers
+     * 
      * @return string
      */
     protected function prepareHeaders(array $headers = array())

@@ -27,7 +27,6 @@ class NativeMailerAdapterTestCase extends \PHPUnit_Framework_TestCase
         $to = array('you');
         $subject = 'Mail subject';
         $content = 'Hey! You have an error at line #1';
-        $headers = array('reply-to' => 'another');
 
         $receivedArguments = array();
         $functionCalls = 0;
@@ -37,7 +36,7 @@ class NativeMailerAdapterTestCase extends \PHPUnit_Framework_TestCase
         });
 
         $adapter = new NativeMailerAdapter();
-        $adapter->send($from, $to, $subject, $content, $headers);
+        $adapter->send($from, $to, $subject, $content);
 
         $this->assertEquals(1, $functionCalls);
 
@@ -48,6 +47,27 @@ class NativeMailerAdapterTestCase extends \PHPUnit_Framework_TestCase
             sprintf("From: %s \r\n", $from),
             $receivedArguments[3]
         );
+    }
+
+    /**
+     * @test
+     *
+     * @depends shouldSendOneMailThroughNativeFunction
+     */
+    public function shouldSendOneMailWithAdditionalHeadersViaNativeFunction()
+    {
+        $headers = array('reply-to' => 'another');
+
+        $receivedArguments = array();
+        $functionCalls = 0;
+        FunctionCallbackRegistry::getInstance()->registerCallback('mail', function() use(&$receivedArguments, &$functionCalls){
+            $receivedArguments = func_get_args();
+            $functionCalls++;
+        });
+
+        $adapter = new NativeMailerAdapter();
+        $adapter->send('from', array('to'), 'subject', 'content', $headers);
+
         $this->assertContains(
             sprintf("Reply-To: %s \r\n", $headers['reply-to']),
             $receivedArguments[3]
@@ -57,13 +77,12 @@ class NativeMailerAdapterTestCase extends \PHPUnit_Framework_TestCase
     /**
      * @test
      */
-    public function shouldCallWithSameDataAsManyTimesAsThereAreRecipients()
+    public function shouldSendMailsAsManyTimesAsThereAreRecipients()
     {
         $from = 'me';
         $to = array('you', 'we', 'they');
         $subject = 'Mail subject';
         $content = 'Hey! You have an error at line #1';
-        $headers = array('reply-to' => 'another');
 
         $receivedArguments = array();
         $functionCalls = 0;
@@ -79,7 +98,7 @@ class NativeMailerAdapterTestCase extends \PHPUnit_Framework_TestCase
         });
 
         $adapter = new NativeMailerAdapter();
-        $adapter->send($from, $to, $subject, $content, $headers);
+        $adapter->send($from, $to, $subject, $content);
 
         $this->assertEquals(count($to), $functionCalls);
 
@@ -98,9 +117,46 @@ class NativeMailerAdapterTestCase extends \PHPUnit_Framework_TestCase
             sprintf("From: %s \r\n", $from),
             $receivedArguments[0]['headers']
         );
+    }
+
+    /**
+     * @test
+     *
+     * @depends shouldSendMailsAsManyTimesAsThereAreRecipients
+     */
+    public function shouldSendMailsWithAdditionalHeadersAsManyTimesAsThereAreRecipients()
+    {
+        $to = array('you', 'we', 'they');
+        $headers = array('reply-to' => 'another');
+
+        $receivedArguments = array();
+        $functionCalls = 0;
+        FunctionCallbackRegistry::getInstance()->registerCallback('mail', function() use(&$receivedArguments, &$functionCalls){
+            $args = func_get_args();
+            $receivedArguments[] = array(
+                'headers' => $args[3],
+            );
+            $functionCalls++;
+        });
+
+        $adapter = new NativeMailerAdapter();
+        $adapter->send('from', $to, 'subject', 'content', $headers);
+
+        $this->assertEquals(count($to), $functionCalls);
+
         $this->assertContains(
             sprintf("Reply-To: %s \r\n", $headers['reply-to']),
             $receivedArguments[0]['headers']
+        );
+
+        $this->assertContains(
+            sprintf("Reply-To: %s \r\n", $headers['reply-to']),
+            $receivedArguments[1]['headers']
+        );
+
+        $this->assertContains(
+            sprintf("Reply-To: %s \r\n", $headers['reply-to']),
+            $receivedArguments[2]['headers']
         );
     }
 }

@@ -11,7 +11,7 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
      * 
      * @test
      */
-    public function shouldBeExtendedByAbstractSender()
+    public function shouldBeSubClassOfAbstractSender()
     {
         $rc = new \ReflectionClass('BadaBoom\ChainNode\Sender\MailSender');
         $this->assertTrue($rc->isSubclassOf('BadaBoom\ChainNode\Sender\AbstractSender'));
@@ -20,14 +20,16 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
     /**
      *
      * @test
+     *
      * @expectedException \InvalidArgumentException
      * @expectedExceptionMessage Given sender
+     *
      * @dataProvider invalidMailProvider
      */
-    public function throwExceptionWhenConstructWithIncorrectSender($sender)
+    public function throwWhenConstructWithIncorrectSender($invalidSender)
     {
         $configuration = new DataHolder();
-        $configuration->set('sender', $sender);
+        $configuration->set('sender', $invalidSender);
 
         new MailSender($this->createMockAdapter(), $this->createMockSerializer(), $configuration);
     }
@@ -35,11 +37,13 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
     /**
      *
      * @test
-     * @depends throwExceptionWhenConstructWithIncorrectSender
+     *
+     * @depends throwWhenConstructWithIncorrectSender
+     *
      * @expectedException \InvalidArgumentException
      * @expectedExceptionMessage Recipients list should not be empty
      */
-    public function throwExceptionWhenConstructWithEmptyRecipientsList()
+    public function throwWhenConstructWithEmptyRecipientsList()
     {
         $configuration = new DataHolder();
         $configuration->set('sender', 'valid@sender.com');
@@ -51,16 +55,19 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
     /**
      *
      * @test
-     * @depends throwExceptionWhenConstructWithEmptyRecipientsList
+     *
+     * @depends throwWhenConstructWithEmptyRecipientsList
+     *
      * @expectedException \InvalidArgumentException
      * @expectedExceptionMessage Given recipient
+     *
      * @dataProvider invalidMailProvider
      */
-    public function throwExceptionWhenConstructWithIncorrectRecipientsList($recipient)
+    public function throwWhenConstructWithIncorrectRecipientsList($invalidRecipient)
     {
         $configuration = new DataHolder();
         $configuration->set('sender', 'valid@sender.com');
-        $configuration->set('recipients', array($recipient));
+        $configuration->set('recipients', array($invalidRecipient));
 
         new MailSender($this->createMockAdapter(), $this->createMockSerializer(), $configuration);
     }
@@ -68,16 +75,19 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
     /**
      *
      * @test
-     * @depends throwExceptionWhenConstructWithIncorrectRecipientsList
+     * 
+     * @depends throwWhenConstructWithIncorrectRecipientsList
+     *
      * @expectedException \InvalidArgumentException
      * @expectedExceptionMessage Given recipient
+     *
      * @dataProvider invalidMailProvider
      */
-    public function throwExceptionWhenConstructWithAnyNumberOfIncorrectRecipients($recipient)
+    public function throwWhenConstructWithAnyNumberOfIncorrectRecipients($invalidRecipient)
     {
         $configuration = new DataHolder();
         $configuration->set('sender', 'valid@sender.com');
-        $configuration->set('recipients', array('valid@recipient.com', $recipient, 'another_valid@recipient.com'));
+        $configuration->set('recipients', array('valid@recipient.com', $invalidRecipient, 'another_valid@recipient.com'));
 
         new MailSender($this->createMockAdapter(), $this->createMockSerializer(), $configuration);
     }
@@ -184,6 +194,9 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
         $sender->handle($data);
     }
 
+    /**
+     * @return \BadaBoom\DataHolder\DataHolder
+     */
     protected function getFullConfiguration()
     {
         $configuration = new DataHolder();

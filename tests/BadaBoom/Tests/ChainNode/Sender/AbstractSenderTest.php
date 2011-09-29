@@ -10,17 +10,30 @@ class AbstractSenderTestCase extends \PHPUnit_Framework_TestCase
      *
      * @test
      */
-    public function shouldBeExtendedByAbstractChainNode()
+    public function shouldBeSubClassOfAbstractChainNode()
     {
         $rc = new \ReflectionClass('BadaBoom\ChainNode\Sender\AbstractSender');
         $this->assertTrue($rc->isSubclassOf('BadaBoom\ChainNode\AbstractChainNode'));
     }
 
     /**
+     * @test
+     *
+     * @expectedException \InvalidArgumentException
+     * @expectedExceptionMessage Mandatory field "format" is missing in the given configuration
+     */
+    public function throwWhenFormatIsNotGivenInConstructor()
+    {
+        $this->createSender($this->createMockAdapter(), $this->createMockSerializer(), new DataHolder());
+    }
+
+    /**
      *
      * @test
+     *
+     * @depends throwWhenFormatIsNotGivenInConstructor
      */
-    public function shouldCheckGivenFormatIntoConstructor()
+    public function shouldCheckGivenFormatInConstructor()
     {
         $format = 'html';
 
@@ -40,12 +53,13 @@ class AbstractSenderTestCase extends \PHPUnit_Framework_TestCase
     /**
      *
      * @test
+     *
      * @expectedException \InvalidArgumentException
      * @expectedExceptionMessage is not supported by serializer
      */
-    public function throwExceptionWhenTryConstructWithUnsupportedSerializeFormat()
+    public function throwWhenTryConstructWithUnsupportedSerializeFormat()
     {
-        $format = 'fake';
+        $format = 'unsupported-format';
         $serializer = $this->createMockSerializer();
         $serializer->expects($this->once())
             ->method('supportsSerialization')
@@ -108,6 +122,7 @@ class AbstractSenderTestCase extends \PHPUnit_Framework_TestCase
      * @param $adapter
      * @param $serializer
      * @param $configuration
+     * 
      * @return AbstractSender
      */
     protected function createSender($adapter, $serializer, $configuration)

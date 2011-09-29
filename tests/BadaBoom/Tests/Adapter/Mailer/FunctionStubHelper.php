@@ -3,7 +3,7 @@
 namespace BadaBoom\Adapter\Mailer;
 
 /**
- * This file contains the stubs of functions that are used into defined namespace
+ * This file contains the stubs of functions that are used in defined namespace
  */
 use BadaBoom\Tests\FunctionCallbackRegistry;
 

@@ -33,12 +33,8 @@ abstract class AbstractSender extends AbstractChainNode
      */
     public function __construct(SenderAdapterInterface $adapter, SerializerInterface $serializer, DataHolderInterface $configuration)
     {
-        if (false == $serializer->supportsSerialization($configuration->get('format'))) {
-            throw new \InvalidArgumentException(sprintf(
-                'Given format "%s" is not supported by serializer',
-                $configuration->get('format')
-            ));
-        }
+        $this->validateFormat($configuration->get('format'), $serializer);
+
         $this->serializer = $serializer;
         $this->configuration = $configuration;
         $this->adapter = $adapter;
@@ -52,5 +48,27 @@ abstract class AbstractSender extends AbstractChainNode
     public function serialize(DataHolderInterface $data)
     {
         return $this->serializer->serialize($data, $this->configuration->get('format'));
+    }
+
+    /**
+     * @throws \InvalidArgumentException
+     *
+     * @param string $format
+     * @param \Symfony\Component\Serializer\SerializerInterface $serializer
+     * 
+     * @return void
+     */
+    protected function validateFormat($format, SerializerInterface $serializer)
+    {
+        if(false == $format) {
+            throw new \InvalidArgumentException('Mandatory field "format" is missing in the given configuration');
+        }
+
+        if (false == $serializer->supportsSerialization($format)) {
+            throw new \InvalidArgumentException(sprintf(
+                'Given format "%s" is not supported by serializer',
+                $format
+            ));
+        }
     }
 }
