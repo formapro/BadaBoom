@@ -92,4 +92,26 @@ class ExceptionSummaryProviderTest extends \PHPUnit_Framework_TestCase
 
         $this->assertFalse($data->has('summary'));
     }
+
+    /**
+     *
+     * @test
+     */
+    public function shouldDelegateHandlingToNextChainNode()
+    {
+        $data = new DataHolder;
+
+        $nextChainNode = $this->createMockChainNode();
+        $nextChainNode->expects($this->once())->method('handle')->with($this->equalTo($data));
+
+        $provider = new ExceptionSummaryProvider();
+        $provider->nextNode($nextChainNode);
+
+        $provider->handle($data);
+    }
+
+    protected function createMockChainNode()
+    {
+        return $this->getMockForAbstractClass('BadaBoom\ChainNode\AbstractChainNode');
+    }
 }
