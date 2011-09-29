@@ -2,9 +2,9 @@
 
 namespace BadaBoom\Adapter\Mailer;
 
-use BadaBoom\Adapter\AdapterInterface;
+use BadaBoom\Adapter\SenderAdapterInterface;
 
-interface MailerAdapterInterface extends AdapterInterface
+interface MailerAdapterInterface extends SenderAdapterInterface
 {
     /**
      * @abstract

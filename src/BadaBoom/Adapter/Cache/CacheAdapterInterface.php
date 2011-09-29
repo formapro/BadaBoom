@@ -2,9 +2,7 @@
 
 namespace BadaBoom\Adapter\Cache;
 
-use BadaBoom\Adapter\AdapterInterface;
-
-interface CacheAdapterInterface extends AdapterInterface
+interface CacheAdapterInterface
 {
     /**
      * Fetches an entry from the cache.

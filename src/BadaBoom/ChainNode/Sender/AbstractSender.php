@@ -4,7 +4,7 @@ namespace BadaBoom\ChainNode\Sender;
 
 use BadaBoom\ChainNode\AbstractChainNode;
 use BadaBoom\DataHolder\DataHolderInterface;
-use BadaBoom\Adapter\AdapterInterface;
+use BadaBoom\Adapter\SenderAdapterInterface;
 
 use Symfony\Component\Serializer\SerializerInterface;
 
@@ -27,11 +27,11 @@ abstract class AbstractSender extends AbstractChainNode
 
     /**
      *
-     * @param AdapterInterface $adapter
+     * @param SenderAdapterInterface $adapter
      * @param SerializerInterface $serializer
      * @param array $parameters
      */
-    public function __construct(AdapterInterface $adapter, SerializerInterface $serializer, DataHolderInterface $configuration)
+    public function __construct(SenderAdapterInterface $adapter, SerializerInterface $serializer, DataHolderInterface $configuration)
     {
         if (false == $serializer->supportsSerialization($configuration->get('format'))) {
             throw new \InvalidArgumentException(sprintf(

@@ -92,7 +92,7 @@ class AbstractSenderTestCase extends \PHPUnit_Framework_TestCase
      */
     protected function createMockAdapter()
     {
-        return $this->getMock('BadaBoom\Adapter\AdapterInterface');
+        return $this->getMock('BadaBoom\Adapter\SenderAdapterInterface');
     }
 
     /**
