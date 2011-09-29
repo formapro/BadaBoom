@@ -23,6 +23,7 @@ class CallbackTest extends \PHPUnit_Framework_TestCase
     {
         $chain = $this->createMockChainNode();
         $callback = new Callback($chain);
+
         $callback->handleException(new \Exception());
     }
 
@@ -44,22 +45,43 @@ class CallbackTest extends \PHPUnit_Framework_TestCase
      *
      * @test
      */
-    public function shouldDelegateHandlingToChainWithExceptionInDataHolder()
+    public function shouldDelegateHandlingToChainWithException()
     {
         $testCase = $this;
-        $exception = new \Exception();
+        $expectedException = new \Exception();
+
         $chain = $this->createMockChainNode();
         $chain->expects($this->once())
             ->method('handle')
-            ->will($this->returnCallback(function($dataHolder) use ($testCase, $exception) {
-                $testCase->assertInstanceOf('BadaBoom\DataHolder\DataHolder', $dataHolder);
-                $testCase->assertSame($exception, $dataHolder->get('exception'));
+            ->will($this->returnCallback(function($actualException) use ($testCase, $expectedException){
+                $testCase->assertSame($expectedException, $actualException);
             }
         ));
 
         $callback = new Callback($chain);
 
-        $callback->handleException($exception);
+        $callback->handleException($expectedException);
+    }
+
+    /**
+     *
+     * @test
+     */
+    public function shouldDelegateHandlingToChainWithCreatedDataHolder()
+    {
+        $testCase = $this;
+
+        $chain = $this->createMockChainNode();
+        $chain->expects($this->once())
+            ->method('handle')
+            ->will($this->returnCallback(function($exception, $dataHolder) use ($testCase){
+                $testCase->assertInstanceOf('BadaBoom\DataHolder\DataHolder', $dataHolder);
+            }
+        ));
+
+        $callback = new Callback($chain);
+
+        $callback->handleException(new \Exception());
     }
 
     /**

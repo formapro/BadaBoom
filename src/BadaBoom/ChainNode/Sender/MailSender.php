@@ -27,7 +27,7 @@ class MailSender extends AbstractSender
     /**
      * {@inheritdoc}
      */
-    public function handle(DataHolderInterface $data)
+    public function handle(\Exception $exception, DataHolderInterface $data)
     {
         $serializedData = $this->serialize($data);
 
@@ -39,7 +39,7 @@ class MailSender extends AbstractSender
             $this->configuration->get('headers')
         );
 
-        $this->handleNextNode($data);
+        $this->handleNextNode($exception, $data);
     }
 
     /**

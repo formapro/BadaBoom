@@ -29,8 +29,7 @@ class Callback
     public function handleException(\Exception $e)
     {
         $data = new DataHolder();
-        $data->set('exception', $e);
 
-        $this->chain->handle($data);
+        $this->chain->handle($e, $data);
     }
 }

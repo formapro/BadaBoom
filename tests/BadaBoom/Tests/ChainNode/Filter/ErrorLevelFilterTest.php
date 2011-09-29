@@ -11,7 +11,7 @@ class ErrorLevelFilterTest extends \PHPUnit_Framework_TestCase
      *
      * @test
      */
-    public function shouldImplementChainNodeInterface()
+    public function shouldBeSubClassOfAbstractFilter()
     {
         $rc = new \ReflectionClass('BadaBoom\ChainNode\Filter\ErrorLevelFilter');
         $this->assertTrue($rc->isSubclassOf('BadaBoom\ChainNode\Filter\AbstractFilterChainNode'));
@@ -21,37 +21,27 @@ class ErrorLevelFilterTest extends \PHPUnit_Framework_TestCase
      *
      * @test
      */
-    public function shouldCallDirectlyNextNotWithoutFilteringIfDataContainNoErrorException()
+    public function shouldAllowToDefineDeniedErrors()
     {
-        $exception = new \Exception('foo');
-        $data = new DataHolder;
-        $data->set('exception', $exception);
+        $filter = new ErrorLevelFilter();
 
-        $nextNode = $this->getMockForAbstractClass('BadaBoom\ChainNode\AbstractChainNode');
-        $nextNode->expects($this->once())->method('handle')->with($this->equalTo($data));
-
-        $filter = $this->getMock('BadaBoom\ChainNode\Filter\ErrorLevelFilter', array('filter'));
-        $filter->expects($this->never())->method('filter');
-        $filter->nextNode($nextNode);
-
-
-        $filter->handle($data);
+        $filter->deny(E_WARNING);
     }
 
     /**
      *
      * @test
      */
-    public function shouldCallFilterIfDataContainErrorException()
+    public function shouldAlwaysPassNoErrorException()
     {
-        $exception = new \ErrorException('foo');
+        $exception = new \Exception('foo');
         $data = new DataHolder;
-        $data->set('exception', $exception);
 
-        $filter = $this->getMock('BadaBoom\ChainNode\Filter\ErrorLevelFilter', array('filter'));
-        $filter->expects($this->once())->method('filter');
+        $filter = new ErrorLevelFilter();
 
-        $filter->handle($data);
+        $filter->deny(E_ALL);
+
+        $this->assertTrue($filter->filter($exception, $data));
     }
 
     /**
@@ -60,27 +50,12 @@ class ErrorLevelFilterTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldPassIfNoRulesDefined()
     {
-        $exception = new \ErrorException('foo');
+        $e = new \ErrorException('foo', null, E_NOTICE, 'foo', '123');
         $data = new DataHolder;
-        $data->set('exception', $exception);
-
-        $nextNode = $this->getMockForAbstractClass('BadaBoom\ChainNode\AbstractChainNode');
-        $nextNode->expects($this->once())->method('handle')->with($this->equalTo($data));
 
         $filter = new ErrorLevelFilter();
-        $filter->nextNode($nextNode);
 
-        $filter->handle($data);
-    }
-
-    /**
-     * 
-     * @test
-     */
-    public function shouldAllowToDefineDeniedErrors()
-    {
-        $filter = new ErrorLevelFilter();
-        $filter->deny(E_WARNING);
+        $this->assertTrue($filter->filter($e, $data));
     }
 
     /**
@@ -90,10 +65,11 @@ class ErrorLevelFilterTest extends \PHPUnit_Framework_TestCase
     public function shouldFilterDeniedErrors()
     {
         $e = new \ErrorException('foo', null, E_WARNING);
+        $data = new DataHolder;
 
         $filter = new ErrorLevelFilter();
         $filter->deny(E_WARNING);
 
-        $this->assertFalse($filter->filter($e));
+        $this->assertFalse($filter->filter($e, $data));
     }
 }

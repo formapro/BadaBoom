@@ -4,6 +4,7 @@ namespace BadaBoom\Tests\ChainNode\Filter;
 
 use BadaBoom\Adapter\Cache\ArrayCacheAdapter;
 use BadaBoom\ChainNode\Filter\DuplicateExceptionFilter;
+use BadaBoom\DataHolder\DataHolder;
 
 class DuplicateExceptionFilterTest extends \PHPUnit_Framework_TestCase
 {
@@ -11,7 +12,7 @@ class DuplicateExceptionFilterTest extends \PHPUnit_Framework_TestCase
      *
      * @test
      */
-    public function shouldImplementChainNodeInterface()
+    public function shouldBeSubClassOfAbstractFilter()
     {
         $rc = new \ReflectionClass('BadaBoom\ChainNode\Filter\DuplicateExceptionFilter');
         $this->assertTrue($rc->isSubclassOf('BadaBoom\ChainNode\Filter\AbstractFilterChainNode'));
@@ -64,6 +65,7 @@ class DuplicateExceptionFilterTest extends \PHPUnit_Framework_TestCase
     public function shouldFilterIfExceptionAlreadyInCache()
     {
         $e = new \Exception('foo');
+
         $cache = $this->createCacheAdapter();
         $filter = new DuplicateExceptionFilter($cache, 2000);
 
@@ -75,7 +77,7 @@ class DuplicateExceptionFilterTest extends \PHPUnit_Framework_TestCase
             ->will($this->returnValue(true));
 
 
-        $this->assertFalse($filter->filter($e));
+        $this->assertFalse($filter->filter($e, new DataHolder));
     }
 
     /**
@@ -95,7 +97,7 @@ class DuplicateExceptionFilterTest extends \PHPUnit_Framework_TestCase
             ->with($this->equalTo($cacheId))
             ->will($this->returnValue(false));
 
-        $this->assertTrue($filter->filter($e));
+        $this->assertTrue($filter->filter($e, new DataHolder));
     }
 
     /**
@@ -122,7 +124,7 @@ class DuplicateExceptionFilterTest extends \PHPUnit_Framework_TestCase
             ->method('contains')
             ->will($this->returnValue(false));
 
-        $this->assertTrue($filter->filter($e));
+        $this->assertTrue($filter->filter($e, new DataHolder));
     }
 
     protected function createCacheAdapter()

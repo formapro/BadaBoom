@@ -13,15 +13,12 @@ class ErrorLevelFilter extends AbstractFilterChainNode
         $this->denyErrors[$error] = $error;
     }
 
-    public function handle(DataHolderInterface $data)
+    public function filter(\Exception $e, DataHolderInterface $data)
     {
-        return $data->get('exception') instanceof \ErrorException ?
-            parent::handle($data) :
-            $this->handleNextNode($data);
-    }
+        if (false == $e instanceof \ErrorException) {
+            return true;
+        }
 
-    public function filter(\Exception $e)
-    {
         foreach ($this->denyErrors as $error) {
             if ($error == $e->getSeverity()) {
                 return false;

@@ -10,7 +10,7 @@ class ExceptionSubjectProviderTestCase extends \PHPUnit_Framework_TestCase
     /**
      * @test
      */
-    public function shouldBeExtendedByAbstractProvider()
+    public function shouldBeSubClassOfAbstractProvider()
     {
         $rc = new \ReflectionClass('BadaBoom\ChainNode\Provider\ExceptionSubjectProvider');
         $this->assertTrue($rc->isSubclassOf('BadaBoom\ChainNode\Provider\AbstractProvider'));
@@ -19,14 +19,35 @@ class ExceptionSubjectProviderTestCase extends \PHPUnit_Framework_TestCase
     /**
      * @test
      */
-    public function shouldNotFillSubjectIfNoExceptionGiven()
+    public function shouldFillDataHolderWithSubject()
     {
+        $e = new \Exception('foo');
+        $expectedSubject = 'Exception: ' . $e->getMessage();
+
         $data = new DataHolder();
 
         $provider = new ExceptionSubjectProvider();
-        $provider->handle($data);
 
-        $this->assertFalse($data->has('subject'));
+        $provider->handle($e, $data);
+
+        $this->assertEquals($expectedSubject, $data->get('subject'));
+    }
+
+    /**
+     * @test
+     */
+    public function shouldNotAddNamespaceOfExceptionToSubject()
+    {
+        $e = new CustomException('foo');
+        $expectedSubject = 'CustomException: ' . $e->getMessage();
+
+        $data = new DataHolder();
+
+        $provider = new ExceptionSubjectProvider();
+
+        $provider->handle($e, $data);
+
+        $this->assertEquals($expectedSubject, $data->get('subject'));
     }
 
     /**
@@ -34,32 +55,16 @@ class ExceptionSubjectProviderTestCase extends \PHPUnit_Framework_TestCase
      */
     public function shouldDelegateHandlingToTheNextNode()
     {
+        $e = new \Exception('foo');
         $data = new DataHolder();
 
         $nextNode = $this->getMockForAbstractClass('BadaBoom\ChainNode\AbstractChainNode');
-        $nextNode->expects($this->once())->method('handle')->with($this->equalTo($data));
+        $nextNode->expects($this->once())->method('handle')->with($this->equalTo($e), $this->equalTo($data));
 
         $provider = new ExceptionSubjectProvider();
         $provider->nextNode($nextNode);
 
-        $provider->handle($data);
-    }
-
-    /**
-     * @test
-     */
-    public function shouldFillDataHolderWithSubject()
-    {
-        $e = new CustomException('foo', 123);
-        $rc = new \ReflectionClass($e);
-        $expectedSubject = $rc->getShortName() . ': ' . $e->getMessage();
-
-        $data = new DataHolder();
-        $data->set('exception', $e);
-
-        $provider = new ExceptionSubjectProvider();
-        $provider->handle($data);
-        $this->assertEquals($expectedSubject, $data->get('subject'));
+        $provider->handle($e, $data);
     }
 }
 

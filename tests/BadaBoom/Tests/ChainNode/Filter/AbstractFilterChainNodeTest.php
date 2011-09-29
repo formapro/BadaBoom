@@ -20,26 +20,21 @@ class AbstractFilterChainNodeTest extends \PHPUnit_Framework_TestCase
      *
      * @test
      */
-    public function shouldAllowToFilter()
+    public function shouldBeSubclassOfAbstractChainNode()
     {
-        $filter = $this->createMockChainFilter();
-
-        $filter->filter(new \Exception());
+        $rc = new \ReflectionClass('BadaBoom\ChainNode\Filter\AbstractFilterChainNode');
+        $this->assertTrue($rc->isSubclassOf('BadaBoom\ChainNode\AbstractChainNode'));
     }
 
     /**
      *
      * @test
      */
-    public function shouldCallFilterIfDataContainException()
+    public function shouldAllowToFilter()
     {
-        $data = new DataHolder();
-        $data->set('exception', new \Exception('foo'));
+        $filter = $this->createMockFilter();
 
-        $filter = $this->createMockChainFilter();
-        $filter->expects($this->once())->method('filter');
-
-        $filter->handle($data);
+        $filter->filter(new \Exception, new DataHolder);
     }
 
     /**
@@ -49,26 +44,12 @@ class AbstractFilterChainNodeTest extends \PHPUnit_Framework_TestCase
     public function shouldProxyDataFromHandleToFilter()
     {
         $e = new \Exception('foo');
-
         $data = new DataHolder();
-        $data->set('exception', $e);
 
-        $filter = $this->createMockChainFilter();
-        $filter->expects($this->once())->method('filter')->with($this->equalTo($e));
+        $filter = $this->createMockFilter();
+        $filter->expects($this->once())->method('filter')->with($this->equalTo($e), $this->equalTo($data));
 
-        $filter->handle($data);
-    }
-
-    /**
-     *
-     * @test
-     */
-    public function shouldNotCallFilterIfDataContainException()
-    {
-        $filter = $this->createMockChainFilter();
-        $filter->expects($this->never())->method('filter');
-
-        $filter->handle(new DataHolder());
+        $filter->handle($e, $data);
     }
 
     /**
@@ -77,18 +58,36 @@ class AbstractFilterChainNodeTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldHandleNextNodeIfFiltrationPassed()
     {
+        $e = new \Exception('foo');
         $data = new DataHolder();
-        $data->set('exception', new \Exception('foo'));
-        
+
         $nextNode = $this->createMockChainNode();
         $nextNode->expects($this->once())->method('handle');
 
-        $filter = $this->createMockChainFilter();
+        $filter = $this->createMockFilter();
         $filter->expects($this->atLeastOnce())->method('filter')->will($this->returnValue(true));
         $filter->nextNode($nextNode);
 
+        $filter->handle($e, $data);
+    }
 
-        $filter->handle($data);
+    /**
+     *
+     * @test
+     */
+    public function shouldHandleNextNodeAndPassExceptionAndHolderToIt()
+    {
+        $e = new \Exception('foo');
+        $data = new DataHolder();
+
+        $nextNode = $this->createMockChainNode();
+        $nextNode->expects($this->once())->method('handle')->with($this->equalTo($e), $this->equalTo($data));
+
+        $filter = $this->createMockFilter();
+        $filter->expects($this->atLeastOnce())->method('filter')->will($this->returnValue(true));
+        $filter->nextNode($nextNode);
+
+        $filter->handle($e, $data);
     }
 
     /**
@@ -97,20 +96,20 @@ class AbstractFilterChainNodeTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldNotHandleNextNodeIfFiltrationNotPassed()
     {
+        $e = new \Exception('foo');
         $data = new DataHolder();
-        $data->set('exception', new \Exception('foo'));
 
         $nextNode = $this->createMockChainNode();
         $nextNode->expects($this->never())->method('handle');
 
-        $filter = $this->createMockChainFilter();
+        $filter = $this->createMockFilter();
         $filter->expects($this->atLeastOnce())->method('filter')->will($this->returnValue(false));
         $filter->nextNode($nextNode);
 
-        $filter->handle($data);
+        $filter->handle($e, $data);
     }
 
-    protected function createMockChainFilter()
+    protected function createMockFilter()
     {
         return $this->getMockForAbstractClass('BadaBoom\ChainNode\Filter\AbstractFilterChainNode');
     }

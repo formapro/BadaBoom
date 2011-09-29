@@ -7,15 +7,12 @@ use BadaBoom\ChainNode\AbstractChainNode;
 
 abstract class AbstractFilterChainNode extends AbstractChainNode
 {
-    public function handle(DataHolderInterface $data)
+    public function handle(\Exception $exception, DataHolderInterface $data)
     {
-        $e = $data->get('exception');
-        if ($e instanceof \Exception) {
-            if ($this->filter($e)) {
-                $this->handleNextNode($data);
-            }
+        if ($this->filter($exception, $data)) {
+            $this->handleNextNode($exception, $data);
         }
     }
 
-    abstract public function filter(\Exception $exception);
+    abstract public function filter(\Exception $exception, DataHolderInterface $data);
 }

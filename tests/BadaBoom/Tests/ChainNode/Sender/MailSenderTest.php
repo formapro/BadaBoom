@@ -148,7 +148,8 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
             )
         ;
         $sender = new MailSender($adapter, $serializer, $configuration);
-        $sender->handle($data);
+
+        $sender->handle(new \Exception, $data);
     }
 
     /**
@@ -156,6 +157,7 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldSendMailAndDelegateHandlingToNextChainNode()
     {
+        $e = new \Exception;
         $data = new DataHolder();
         $configuration = $this->getFullConfiguration();
 
@@ -167,12 +169,12 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
         $adapter->expects($this->once())->method('send');
 
         $nextChainNode = $this->createMockChainNode();
-        $nextChainNode->expects($this->once())->method('handle')->with($this->equalTo($data));
+        $nextChainNode->expects($this->once())->method('handle')->with($this->equalTo($e), $this->equalTo($data));
 
         $sender = new MailSender($adapter, $serializer, $configuration);
         $sender->nextNode($nextChainNode);
         
-        $sender->handle($data);
+        $sender->handle($e, $data);
     }
 
     /**

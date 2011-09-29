@@ -56,15 +56,16 @@ class AbstractChainNodeTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldDelegateHandlingToNextChainNode()
     {
+        $exception = new \Exception;
         $data = new DataHolder;
 
         $chainNode = $this->createMockChainNode();
         $nextChainNode = $this->createMockChainNode();
-        $nextChainNode->expects($this->once())->method('handle')->with($this->equalTo($data));
+        $nextChainNode->expects($this->once())->method('handle')->with($this->equalTo($exception), $this->equalTo($data));
 
         $chainNode->nextNode($nextChainNode);
 
-        $chainNode->handleNextNode($data);
+        $chainNode->handleNextNode($exception, $data);
     }
 
     /**
@@ -73,7 +74,7 @@ class AbstractChainNodeTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldNotDelegateHandlingIfNextChainNodeIsUndefined()
     {
-        $this->createMockChainNode()->handleNextNode(new DataHolder);
+        $this->createMockChainNode()->handleNextNode(new \Exception, new DataHolder);
     }
 
     /**
