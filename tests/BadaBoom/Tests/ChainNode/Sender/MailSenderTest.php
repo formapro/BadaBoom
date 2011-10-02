@@ -24,7 +24,7 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
      * @expectedException \InvalidArgumentException
      * @expectedExceptionMessage Given sender
      *
-     * @dataProvider invalidMailProvider
+     * @dataProvider provideInvalidMail
      */
     public function throwWhenConstructWithIncorrectSender($invalidSender)
     {
@@ -61,7 +61,7 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
      * @expectedException \InvalidArgumentException
      * @expectedExceptionMessage Given recipient
      *
-     * @dataProvider invalidMailProvider
+     * @dataProvider provideInvalidMail
      */
     public function throwWhenConstructWithIncorrectRecipientsList($invalidRecipient)
     {
@@ -81,7 +81,7 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
      * @expectedException \InvalidArgumentException
      * @expectedExceptionMessage Given recipient
      *
-     * @dataProvider invalidMailProvider
+     * @dataProvider provideInvalidMail
      */
     public function throwWhenConstructWithAnyNumberOfIncorrectRecipients($invalidRecipient)
     {
@@ -95,7 +95,7 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
     /**
      * @test
      */
-    public function shouldPassSenderAndRecipientsCheckAndDelegateConstructingToParent()
+    public function shouldValidateSenderAndRecipientsAndFormatInConstruct()
     {
         $sender = 'valid@recipient.com';
         $recipient = array('john@doe.com');
@@ -157,40 +157,21 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
     public function shouldSendMailAndDelegateHandlingToNextChainNode()
     {
         $data = new DataHolder();
-        $serializedData = 'Plain text';
         $configuration = $this->getFullConfiguration();
 
         $serializer = $this->createMockSerializer();
-        $serializer->expects($this->once())
-            ->method('supportsSerialization')
-            ->with($configuration->get('format'))
-            ->will($this->returnValue(true))
-        ;
-        $serializer->expects($this->once())
-            ->method('serialize')
-            ->with($data, $configuration->get('format'))
-            ->will($this->returnValue($serializedData));
+        $serializer->expects($this->once())->method('supportsSerialization')->will($this->returnValue(true));
+        $serializer->expects($this->once())->method('serialize');
 
         $adapter = $this->createMockAdapter();
-        $adapter->expects($this->once())
-            ->method('send')
-            ->with(
-                $configuration->get('sender'),
-                $configuration->get('recipients'),
-                $configuration->get('subject'),
-                $serializedData,
-                $configuration->get('headers')
-            )
-        ;
+        $adapter->expects($this->once())->method('send');
 
         $nextChainNode = $this->createMockChainNode();
-        $nextChainNode->expects($this->once())
-            ->method('handle')
-            ->with($this->equalTo($data))
-        ;
+        $nextChainNode->expects($this->once())->method('handle')->with($this->equalTo($data));
 
         $sender = new MailSender($adapter, $serializer, $configuration);
         $sender->nextNode($nextChainNode);
+        
         $sender->handle($data);
     }
 
@@ -230,7 +211,7 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
      * @static
      * @return array
      */
-    public static function invalidMailProvider()
+    public static function provideInvalidMail()
     {
         return array(
             array(' '),
