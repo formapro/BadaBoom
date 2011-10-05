@@ -20,23 +20,15 @@ class ExceptionSummaryProvider extends AbstractProvider
         $this->sectionName = $sectionName;
     }
 
-    /**
-     * @param \BadaBoom\DataHolder\DataHolderInterface $data
-     *
-     * @return void
-     */
-    public function handle(DataHolderInterface $data)
+    public function handle(\Exception $exception, DataHolderInterface $data)
     {
-        $e = $data->get('exception');
-        if ($e instanceof \Exception) {
-            $data->set($this->sectionName, array(
-                'class' => get_class($e),
-                'code' => $e->getCode(),
-                'message' => $e->getMessage(),
-                'file' => "{$e->getFile()}, Line: {$e->getLine()}",
-            ));
-        }
+        $data->set($this->sectionName, array(
+            'class' => get_class($exception),
+            'code' => $exception->getCode(),
+            'message' => $exception->getMessage(),
+            'file' => "{$exception->getFile()}, Line: {$exception->getLine()}",
+        ));
 
-        $this->handleNextNode($data);
+        $this->handleNextNode($exception, $data);
     }
 }

@@ -18,10 +18,10 @@ abstract class AbstractChainNode implements ChainNodeInterface
      *
      * @return void
      */
-    public function handleNextNode(DataHolderInterface $data)
+    public function handleNextNode(\Exception $exception, DataHolderInterface $data)
     {
         if ($this->nextNode) {
-            $this->nextNode->handle($data);
+            $this->nextNode->handle($exception, $data);
         }
     }
 

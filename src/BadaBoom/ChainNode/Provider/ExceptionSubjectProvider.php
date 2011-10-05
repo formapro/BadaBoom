@@ -10,14 +10,12 @@ class ExceptionSubjectProvider extends AbstractProvider
      * @param \BadaBoom\DataHolder\DataHolderInterface $data
      * @return mixed    
      */
-    public function handle(DataHolderInterface $data)
+    public function handle(\Exception $exception, DataHolderInterface $data)
     {
-        $e = $data->get('exception');
-        if(false == empty($e)) {
-            $rc = new \ReflectionClass($e);
-            $data->set('subject', sprintf('%s: %s', $rc->getShortName(), $e->getMessage()));
-        }
+        $rc = new \ReflectionClass($exception);
 
-        return $this->handleNextNode($data);
+        $data->set('subject', sprintf('%s: %s', $rc->getShortName(), $exception->getMessage()));
+
+        return $this->handleNextNode($exception, $data);
     }
 }

@@ -8,6 +8,27 @@ class ExceptionClassFilter extends AbstractFilterChainNode
 {
     protected $rules = array();
 
+    public function filter(\Exception $exception, DataHolderInterface $data)
+    {
+        $caughtExceptionClass = get_class($exception);
+        while ($caughtExceptionClass) {
+            foreach ($this->rules as $exceptionClass => $rule) {
+                if ($caughtExceptionClass === $exceptionClass) {
+                    return $rule;
+                }
+            }
+
+            $rc = new \ReflectionClass($caughtExceptionClass);
+            if ($prc = $rc->getParentClass()) {
+                $caughtExceptionClass = $prc->getName();
+            } else {
+                $caughtExceptionClass = null;
+            }
+        }
+
+        return false;
+    }
+
     public function allow($exceptionClass)
     {
         $this->setRule($exceptionClass, true);
@@ -30,26 +51,5 @@ class ExceptionClassFilter extends AbstractFilterChainNode
         }
 
         $this->rules[$exceptionClass] = $rule;
-    }
-
-    public function filter(\Exception $e)
-    {
-        $caughtExceptionClass = get_class($e);
-        while ($caughtExceptionClass) {
-            foreach ($this->rules as $exceptionClass => $rule) {
-                if ($caughtExceptionClass === $exceptionClass) {
-                    return $rule;
-                }
-            }
-
-            $rc = new \ReflectionClass($caughtExceptionClass);
-            if ($prc = $rc->getParentClass()) {
-                $caughtExceptionClass = $prc->getName();
-            } else {
-                $caughtExceptionClass = null;
-            }
-        }
-
-        return false;
     }
 }
