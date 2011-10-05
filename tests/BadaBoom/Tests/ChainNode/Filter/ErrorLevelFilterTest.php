@@ -50,12 +50,12 @@ class ErrorLevelFilterTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldPassIfNoRulesDefined()
     {
-        $e = new \ErrorException('foo', null, E_NOTICE, 'foo', '123');
+        $exception = new \ErrorException('foo', null, E_NOTICE, 'foo', '123');
         $data = new DataHolder;
 
         $filter = new ErrorLevelFilter();
 
-        $this->assertTrue($filter->filter($e, $data));
+        $this->assertTrue($filter->filter($exception, $data));
     }
 
     /**
@@ -64,12 +64,12 @@ class ErrorLevelFilterTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldFilterDeniedErrors()
     {
-        $e = new \ErrorException('foo', null, E_WARNING);
+        $exception = new \ErrorException('foo', null, E_WARNING);
         $data = new DataHolder;
 
         $filter = new ErrorLevelFilter();
         $filter->deny(E_WARNING);
 
-        $this->assertFalse($filter->filter($e, $data));
+        $this->assertFalse($filter->filter($exception, $data));
     }
 }

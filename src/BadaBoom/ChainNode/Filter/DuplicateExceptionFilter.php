@@ -44,12 +44,12 @@ class DuplicateExceptionFilter extends AbstractFilterChainNode
     }
 
     /**
-     * @param \Exception $e
+     * @param \Exception $exception
      * 
      * @return string
      */
-    public function generateCacheId(\Exception $e)
+    public function generateCacheId(\Exception $exception)
     {
-        return md5(get_class($e) . $e->getFile() . $e->getLine());
+        return md5(get_class($exception) . $exception->getFile() . $exception->getLine());
     }
 }

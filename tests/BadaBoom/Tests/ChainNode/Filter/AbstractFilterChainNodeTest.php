@@ -43,13 +43,13 @@ class AbstractFilterChainNodeTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldProxyDataFromHandleToFilter()
     {
-        $e = new \Exception('foo');
+        $exception = new \Exception('foo');
         $data = new DataHolder();
 
         $filter = $this->createMockFilter();
-        $filter->expects($this->once())->method('filter')->with($this->equalTo($e), $this->equalTo($data));
+        $filter->expects($this->once())->method('filter')->with($this->equalTo($exception), $this->equalTo($data));
 
-        $filter->handle($e, $data);
+        $filter->handle($exception, $data);
     }
 
     /**
@@ -58,7 +58,7 @@ class AbstractFilterChainNodeTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldHandleNextNodeIfFiltrationPassed()
     {
-        $e = new \Exception('foo');
+        $exception = new \Exception('foo');
         $data = new DataHolder();
 
         $nextNode = $this->createMockChainNode();
@@ -68,7 +68,7 @@ class AbstractFilterChainNodeTest extends \PHPUnit_Framework_TestCase
         $filter->expects($this->atLeastOnce())->method('filter')->will($this->returnValue(true));
         $filter->nextNode($nextNode);
 
-        $filter->handle($e, $data);
+        $filter->handle($exception, $data);
     }
 
     /**
@@ -77,17 +77,17 @@ class AbstractFilterChainNodeTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldHandleNextNodeAndPassExceptionAndHolderToIt()
     {
-        $e = new \Exception('foo');
+        $exception = new \Exception('foo');
         $data = new DataHolder();
 
         $nextNode = $this->createMockChainNode();
-        $nextNode->expects($this->once())->method('handle')->with($this->equalTo($e), $this->equalTo($data));
+        $nextNode->expects($this->once())->method('handle')->with($this->equalTo($exception), $this->equalTo($data));
 
         $filter = $this->createMockFilter();
         $filter->expects($this->atLeastOnce())->method('filter')->will($this->returnValue(true));
         $filter->nextNode($nextNode);
 
-        $filter->handle($e, $data);
+        $filter->handle($exception, $data);
     }
 
     /**
@@ -96,7 +96,7 @@ class AbstractFilterChainNodeTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldNotHandleNextNodeIfFiltrationNotPassed()
     {
-        $e = new \Exception('foo');
+        $exception = new \Exception('foo');
         $data = new DataHolder();
 
         $nextNode = $this->createMockChainNode();
@@ -106,7 +106,7 @@ class AbstractFilterChainNodeTest extends \PHPUnit_Framework_TestCase
         $filter->expects($this->atLeastOnce())->method('filter')->will($this->returnValue(false));
         $filter->nextNode($nextNode);
 
-        $filter->handle($e, $data);
+        $filter->handle($exception, $data);
     }
 
     protected function createMockFilter()

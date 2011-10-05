@@ -23,11 +23,11 @@ class ExceptionSummaryProviderTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldSetDefaultSectionNameIfNotProvided()
     {
-        $e = new \Exception('foo');
+        $exception = new \Exception('foo');
         $data = new DataHolder;
 
         $provider = new ExceptionSummaryProvider();
-        $provider->handle($e, $data);
+        $provider->handle($exception, $data);
 
         $this->assertTrue($data->has('summary'));
     }
@@ -38,11 +38,11 @@ class ExceptionSummaryProviderTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldUseCustomSectionNameIfProvided()
     {
-        $e = new \Exception('foo');
+        $exception = new \Exception('foo');
         $data = new DataHolder();
 
         $provider = new ExceptionSummaryProvider('barSection');
-        $provider->handle($e, $data);
+        $provider->handle($exception, $data);
 
         $this->assertTrue($data->has('barSection'));
         $this->assertFalse($data->has('summary'));
@@ -54,11 +54,11 @@ class ExceptionSummaryProviderTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldFillDataHolderWithExceptionInfo()
     {
-        $e = new \Exception('foo', 123);
+        $exception = new \Exception('foo', 123);
         $data = new DataHolder();
 
         $provider = new ExceptionSummaryProvider();
-        $provider->handle($e, $data);
+        $provider->handle($exception, $data);
 
         $summary = $data->get('summary');
         $this->assertInternalType('array', $summary);
@@ -80,16 +80,16 @@ class ExceptionSummaryProviderTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldDelegateHandlingToNextChainNode()
     {
-        $e = new \Exception;
+        $exception = new \Exception;
         $data = new DataHolder;
 
         $nextChainNode = $this->createMockChainNode();
-        $nextChainNode->expects($this->once())->method('handle')->with($this->equalTo($e), $this->equalTo($data));
+        $nextChainNode->expects($this->once())->method('handle')->with($this->equalTo($exception), $this->equalTo($data));
 
         $provider = new ExceptionSummaryProvider();
         $provider->nextNode($nextChainNode);
 
-        $provider->handle($e, $data);
+        $provider->handle($exception, $data);
     }
 
     protected function createMockChainNode()

@@ -21,14 +21,14 @@ class ExceptionSubjectProviderTestCase extends \PHPUnit_Framework_TestCase
      */
     public function shouldFillDataHolderWithSubject()
     {
-        $e = new \Exception('foo');
-        $expectedSubject = 'Exception: ' . $e->getMessage();
+        $exception = new \Exception('foo');
+        $expectedSubject = 'Exception: ' . $exception->getMessage();
 
         $data = new DataHolder();
 
         $provider = new ExceptionSubjectProvider();
 
-        $provider->handle($e, $data);
+        $provider->handle($exception, $data);
 
         $this->assertEquals($expectedSubject, $data->get('subject'));
     }
@@ -38,14 +38,14 @@ class ExceptionSubjectProviderTestCase extends \PHPUnit_Framework_TestCase
      */
     public function shouldNotAddNamespaceOfExceptionToSubject()
     {
-        $e = new CustomException('foo');
-        $expectedSubject = 'CustomException: ' . $e->getMessage();
+        $exception = new CustomException('foo');
+        $expectedSubject = 'CustomException: ' . $exception->getMessage();
 
         $data = new DataHolder();
 
         $provider = new ExceptionSubjectProvider();
 
-        $provider->handle($e, $data);
+        $provider->handle($exception, $data);
 
         $this->assertEquals($expectedSubject, $data->get('subject'));
     }
@@ -55,16 +55,16 @@ class ExceptionSubjectProviderTestCase extends \PHPUnit_Framework_TestCase
      */
     public function shouldDelegateHandlingToTheNextNode()
     {
-        $e = new \Exception('foo');
+        $exception = new \Exception('foo');
         $data = new DataHolder();
 
         $nextNode = $this->getMockForAbstractClass('BadaBoom\ChainNode\AbstractChainNode');
-        $nextNode->expects($this->once())->method('handle')->with($this->equalTo($e), $this->equalTo($data));
+        $nextNode->expects($this->once())->method('handle')->with($this->equalTo($exception), $this->equalTo($data));
 
         $provider = new ExceptionSubjectProvider();
         $provider->nextNode($nextNode);
 
-        $provider->handle($e, $data);
+        $provider->handle($exception, $data);
     }
 }
 

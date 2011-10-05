@@ -49,11 +49,11 @@ class DuplicateExceptionFilterTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldGenerateSameCacheIdAsExpected()
     {
-        $e = new \Exception('foo');
+        $exception = new \Exception('foo');
         $filter = new DuplicateExceptionFilter($this->createCacheAdapter(), 2000);
 
-        $expectedCacheId = md5(get_class($e) . $e->getFile() . $e->getLine());
-        $actualCacheId = $filter->generateCacheId($e);
+        $expectedCacheId = md5(get_class($exception) . $exception->getFile() . $exception->getLine());
+        $actualCacheId = $filter->generateCacheId($exception);
 
         $this->assertEquals($expectedCacheId, $actualCacheId);
     }
@@ -64,12 +64,12 @@ class DuplicateExceptionFilterTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldFilterIfExceptionAlreadyInCache()
     {
-        $e = new \Exception('foo');
+        $exception = new \Exception('foo');
 
         $cache = $this->createCacheAdapter();
         $filter = new DuplicateExceptionFilter($cache, 2000);
 
-        $cacheId = $filter->generateCacheId($e);
+        $cacheId = $filter->generateCacheId($exception);
         $cache
             ->expects($this->once())
             ->method('contains')
@@ -77,7 +77,7 @@ class DuplicateExceptionFilterTest extends \PHPUnit_Framework_TestCase
             ->will($this->returnValue(true));
 
 
-        $this->assertFalse($filter->filter($e, new DataHolder));
+        $this->assertFalse($filter->filter($exception, new DataHolder));
     }
 
     /**
@@ -86,18 +86,18 @@ class DuplicateExceptionFilterTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldPassIfExceptionNotInCache()
     {
-        $e = new \Exception('foo');
+        $exception = new \Exception('foo');
         $cache = $this->createCacheAdapter();
         $filter = new DuplicateExceptionFilter($cache, 2000);
 
-        $cacheId = $filter->generateCacheId($e);
+        $cacheId = $filter->generateCacheId($exception);
         $cache
             ->expects($this->once())
             ->method('contains')
             ->with($this->equalTo($cacheId))
             ->will($this->returnValue(false));
 
-        $this->assertTrue($filter->filter($e, new DataHolder));
+        $this->assertTrue($filter->filter($exception, new DataHolder));
     }
 
     /**
@@ -108,12 +108,12 @@ class DuplicateExceptionFilterTest extends \PHPUnit_Framework_TestCase
     {
         $expectedLifeTime = 2000;
 
-        $e = new \Exception('foo');
+        $exception = new \Exception('foo');
         $cache = $this->createCacheAdapter();
 
         $filter = new DuplicateExceptionFilter($cache, $expectedLifeTime);
 
-        $cacheId = $filter->generateCacheId($e);
+        $cacheId = $filter->generateCacheId($exception);
 
         $cache
             ->expects($this->once())
@@ -124,7 +124,7 @@ class DuplicateExceptionFilterTest extends \PHPUnit_Framework_TestCase
             ->method('contains')
             ->will($this->returnValue(false));
 
-        $this->assertTrue($filter->filter($e, new DataHolder));
+        $this->assertTrue($filter->filter($exception, new DataHolder));
     }
 
     protected function createCacheAdapter()
