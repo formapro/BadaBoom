@@ -4,7 +4,7 @@ namespace BadaBoom\ChainNode\Filter;
 
 use BadaBoom\DataHolder\DataHolderInterface;
 
-class ErrorLevelFilter extends AbstractFilterChainNode
+class ErrorLevelFilter extends AbstractFilter
 {
     protected $denyErrors = array();
 

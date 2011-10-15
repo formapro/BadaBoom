@@ -4,7 +4,7 @@ namespace BadaBoom\Tests\ChainNode\Filter;
 
 use BadaBoom\DataHolder\DataHolder;
 
-class AbstractFilterChainNodeTest extends \PHPUnit_Framework_TestCase
+class AbstractFilterTest extends \PHPUnit_Framework_TestCase
 {
     /**
      *
@@ -12,7 +12,7 @@ class AbstractFilterChainNodeTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldNotBeInstanciable()
     {
-        $rc = new \ReflectionClass('BadaBoom\ChainNode\Filter\AbstractFilterChainNode');
+        $rc = new \ReflectionClass('BadaBoom\ChainNode\Filter\AbstractFilter');
         $this->assertFalse($rc->isInstantiable());
     }
 
@@ -22,7 +22,7 @@ class AbstractFilterChainNodeTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldBeSubclassOfAbstractChainNode()
     {
-        $rc = new \ReflectionClass('BadaBoom\ChainNode\Filter\AbstractFilterChainNode');
+        $rc = new \ReflectionClass('BadaBoom\ChainNode\Filter\AbstractFilter');
         $this->assertTrue($rc->isSubclassOf('BadaBoom\ChainNode\AbstractChainNode'));
     }
 
@@ -111,7 +111,7 @@ class AbstractFilterChainNodeTest extends \PHPUnit_Framework_TestCase
 
     protected function createMockFilter()
     {
-        return $this->getMockForAbstractClass('BadaBoom\ChainNode\Filter\AbstractFilterChainNode');
+        return $this->getMockForAbstractClass('BadaBoom\ChainNode\Filter\AbstractFilter');
     }
 
     protected function createMockChainNode()
