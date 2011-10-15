@@ -36,7 +36,7 @@ class MailSender extends AbstractSender
             $this->configuration->get('recipients'),
             $this->configuration->get('subject'),
             $serializedData,
-            $this->configuration->get('headers')
+            $this->configuration->get('headers', array())
         );
 
         $this->handleNextNode($exception, $data);
