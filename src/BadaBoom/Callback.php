@@ -24,13 +24,12 @@ class Callback
 
     /**
      *
-     * @param \Exception $e
+     * @param \Exception $exception
      */
-    public function handleException(\Exception $e)
+    public function handleException(\Exception $exception)
     {
         $data = new DataHolder();
-        $data->set('exception', $e);
 
-        $this->chain->handle($data);
+        $this->chain->handle($exception, $data);
     }
 }

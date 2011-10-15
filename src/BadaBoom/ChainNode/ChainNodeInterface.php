@@ -12,7 +12,7 @@ interface ChainNodeInterface
      *
      * @return void
      */
-    function handle(DataHolderInterface $data);
+    function handle(\Exception $exception, DataHolderInterface $data);
 
     /**
      *

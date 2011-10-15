@@ -21,7 +21,7 @@ class ExceptionClassFilterTest extends \PHPUnit_Framework_TestCase
      *
      * @test
      */
-    public function shouldImplementChainNodeInterface()
+    public function shouldBeSubClassOfAbstractFilter()
     {
         $rc = new \ReflectionClass('BadaBoom\ChainNode\Filter\ExceptionClassFilter');
         $this->assertTrue($rc->isSubclassOf('BadaBoom\ChainNode\Filter\AbstractFilterChainNode'));
@@ -31,7 +31,7 @@ class ExceptionClassFilterTest extends \PHPUnit_Framework_TestCase
      *
      * @test
      */
-    public function shouldAllowToSetAllowedClasses()
+    public function shouldAllowToSetAllowedExceptionClass()
     {
         $filter = new ExceptionClassFilter();
 
@@ -45,7 +45,7 @@ class ExceptionClassFilterTest extends \PHPUnit_Framework_TestCase
      * @expectedException InvalidArgumentException
      * @expectedExceptionMessage Class not exists: `NotExistException`
      */
-    public function shouldThrowIfAllowedClassNotExist()
+    public function shouldThrowIfAllowedExceptionClassNotExist()
     {
         $filter = new ExceptionClassFilter();
 
@@ -59,7 +59,7 @@ class ExceptionClassFilterTest extends \PHPUnit_Framework_TestCase
      * @expectedException InvalidArgumentException
      * @expectedExceptionMessage Class `stdClass` is not a subclass of `Exception`
      */
-    public function shouldThrowIfAllowedClassIsNotSubclassOfException()
+    public function shouldThrowIfAllowedExceptionClassIsNotSubclassOfException()
     {
         $filter = new ExceptionClassFilter();
 
@@ -84,7 +84,7 @@ class ExceptionClassFilterTest extends \PHPUnit_Framework_TestCase
      * @expectedException InvalidArgumentException
      * @expectedExceptionMessage Class not exists: `NotExistException`
      */
-    public function shouldThrowIfDeniedClassNotExist()
+    public function shouldThrowIfDeniedExceptionClassNotExist()
     {
         $filter = new ExceptionClassFilter();
 
@@ -98,7 +98,7 @@ class ExceptionClassFilterTest extends \PHPUnit_Framework_TestCase
      * @expectedException InvalidArgumentException
      * @expectedExceptionMessage Class `stdClass` is not a subclass of `Exception`
      */
-    public function shouldThrowIfDeniedClassIsNotSubclassOfException()
+    public function shouldThrowIfDeniedExceptionClassIsNotSubclassOfException()
     {
         $filter = new ExceptionClassFilter();
 
@@ -111,14 +111,9 @@ class ExceptionClassFilterTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldDenyByDefault()
     {
-        $e = new \Exception;
-
-        $data = new DataHolder();
-        $data->set('exception', $e);
-
         $filter = new ExceptionClassFilter();
 
-        $this->assertFalse($filter->filter($e));
+        $this->assertFalse($filter->filter(new \Exception, new DataHolder));
     }
 
     /**
@@ -127,10 +122,8 @@ class ExceptionClassFilterTest extends \PHPUnit_Framework_TestCase
      *
      * @dataProvider provideFilterCases
      */
-    public function shouldWorkAsExpected($exceptionClass, $expectedResult, $failMessage)
+    public function shouldWorkAsExpectedInCases($exceptionClass, $expectedResult, $failMessage)
     {
-        $exception = new $exceptionClass;
-
         $filter = new ExceptionClassFilter();
 
         $filter->allow('Exception');
@@ -138,7 +131,10 @@ class ExceptionClassFilterTest extends \PHPUnit_Framework_TestCase
         $filter->allow('InvalidArgumentException');
         $filter->deny('BadFunctionCallException');
 
-        $this->assertEquals($expectedResult, $filter->filter($exception), $failMessage);
+        //SUT
+        $result = $filter->filter(new $exceptionClass, new DataHolder());
+
+        $this->assertEquals($expectedResult, $result, $failMessage);
     }
 
     /**
@@ -149,8 +145,6 @@ class ExceptionClassFilterTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldNotDependsOnRulesOrder($exceptionClass, $expectedResult, $failMessage)
     {
-        $exception = new $exceptionClass;
-
         $filter = new ExceptionClassFilter();
 
         $filter->deny('BadFunctionCallException');
@@ -158,7 +152,10 @@ class ExceptionClassFilterTest extends \PHPUnit_Framework_TestCase
         $filter->deny('LogicException');
         $filter->allow('Exception');
 
-        $this->assertEquals($expectedResult, $filter->filter($exception), $failMessage);
+        //SUT
+        $result = $filter->filter(new $exceptionClass, new DataHolder());
+
+        $this->assertEquals($expectedResult, $result, $failMessage);
     }
 
     /**
@@ -167,16 +164,16 @@ class ExceptionClassFilterTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldRewriteRule()
     {
-        $e = new \Exception;
-
-        $data = new DataHolder();
-        $data->set('exception', $e);
-
         $filter = new ExceptionClassFilter();
 
         $filter->deny('Exception');
         $filter->allow('Exception');
 
-        $this->assertTrue($filter->filter($e));
+        $this->assertTrue($filter->filter(new \Exception, new DataHolder));
+    }
+
+    protected function createMockChainNode()
+    {
+        return $this->getMockForAbstractClass('BadaBoom\ChainNode\AbstractChainNode');
     }
 }

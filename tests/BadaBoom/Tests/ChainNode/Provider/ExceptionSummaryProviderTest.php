@@ -23,13 +23,11 @@ class ExceptionSummaryProviderTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldSetDefaultSectionNameIfNotProvided()
     {
-        $e = new \Exception('foo');
-
-        $data = new DataHolder();
-        $data->set('exception', $e);
+        $exception = new \Exception('foo');
+        $data = new DataHolder;
 
         $provider = new ExceptionSummaryProvider();
-        $provider->handle($data);
+        $provider->handle($exception, $data);
 
         $this->assertTrue($data->has('summary'));
     }
@@ -40,15 +38,14 @@ class ExceptionSummaryProviderTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldUseCustomSectionNameIfProvided()
     {
-        $e = new \Exception('foo');
-
+        $exception = new \Exception('foo');
         $data = new DataHolder();
-        $data->set('exception', $e);
 
         $provider = new ExceptionSummaryProvider('barSection');
-        $provider->handle($data);
+        $provider->handle($exception, $data);
 
         $this->assertTrue($data->has('barSection'));
+        $this->assertFalse($data->has('summary'));
     }
 
     /**
@@ -57,13 +54,11 @@ class ExceptionSummaryProviderTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldFillDataHolderWithExceptionInfo()
     {
-        $e = new \Exception('foo', 123);
-
+        $exception = new \Exception('foo', 123);
         $data = new DataHolder();
-        $data->set('exception', $e);
 
         $provider = new ExceptionSummaryProvider();
-        $provider->handle($data);
+        $provider->handle($exception, $data);
 
         $summary = $data->get('summary');
         $this->assertInternalType('array', $summary);
@@ -83,31 +78,18 @@ class ExceptionSummaryProviderTest extends \PHPUnit_Framework_TestCase
      *
      * @test
      */
-    public function shouldNotFillDataIfNoExceptionGiven()
-    {
-        $data = new DataHolder();
-        
-        $provider = new ExceptionSummaryProvider();
-        $provider->handle($data);
-
-        $this->assertFalse($data->has('summary'));
-    }
-
-    /**
-     *
-     * @test
-     */
     public function shouldDelegateHandlingToNextChainNode()
     {
+        $exception = new \Exception;
         $data = new DataHolder;
 
         $nextChainNode = $this->createMockChainNode();
-        $nextChainNode->expects($this->once())->method('handle')->with($this->equalTo($data));
+        $nextChainNode->expects($this->once())->method('handle')->with($this->equalTo($exception), $this->equalTo($data));
 
         $provider = new ExceptionSummaryProvider();
         $provider->nextNode($nextChainNode);
 
-        $provider->handle($data);
+        $provider->handle($exception, $data);
     }
 
     protected function createMockChainNode()
