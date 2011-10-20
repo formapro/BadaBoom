@@ -158,6 +158,8 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldSendEmptySubjectIfItWasNotSetBefore()
     {
+        $emptySubject = null;
+        $exception = new \Exception;
         $data = new DataHolder();
 
         $configuration = new DataHolder();
@@ -176,14 +178,14 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
             ->with(
                 $configuration->get('sender'),
                 $configuration->get('recipients'),
-                null,
+                $emptySubject,
                 null,
                 $configuration->get('headers')
             )
         ;
 
         $sender = new MailSender($adapter, $serializer, $configuration);
-        $sender->handle($data);
+        $sender->handle($exception, $data);
     }
 
     /**
@@ -191,6 +193,8 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldSendEmptyHeadersListIfItWasNotSetBefore()
     {
+        $emptyHeaderList = array();
+        $exception = new \Exception;
         $data = new DataHolder();
 
         $configuration = new DataHolder();
@@ -210,12 +214,12 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
                 $configuration->get('recipients'),
                 null,
                 null,
-                array()
+                $emptyHeaderList
             )
         ;
 
         $sender = new MailSender($adapter, $serializer, $configuration);
-        $sender->handle($data);
+        $sender->handle($exception, $data);
     }
 
     /**
