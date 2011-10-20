@@ -5,7 +5,7 @@ namespace BadaBoom\ChainNode\Filter;
 use BadaBoom\Adapter\Cache\CacheAdapterInterface;
 use \BadaBoom\DataHolder\DataHolderInterface;
 
-class DuplicateExceptionFilter extends AbstractFilterChainNode
+class DuplicateExceptionFilter extends AbstractFilter
 {
     /**
      * @var BadaBoom\Adapter\Cache\CacheAdapterInterface

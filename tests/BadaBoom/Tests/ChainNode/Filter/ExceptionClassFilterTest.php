@@ -24,7 +24,7 @@ class ExceptionClassFilterTest extends \PHPUnit_Framework_TestCase
     public function shouldBeSubClassOfAbstractFilter()
     {
         $rc = new \ReflectionClass('BadaBoom\ChainNode\Filter\ExceptionClassFilter');
-        $this->assertTrue($rc->isSubclassOf('BadaBoom\ChainNode\Filter\AbstractFilterChainNode'));
+        $this->assertTrue($rc->isSubclassOf('BadaBoom\ChainNode\Filter\AbstractFilter'));
     }
 
     /**

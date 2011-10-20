@@ -4,7 +4,7 @@ namespace BadaBoom\ChainNode\Filter;
 
 use BadaBoom\DataHolder\DataHolderInterface;
 
-class ExceptionClassFilter extends AbstractFilterChainNode
+class ExceptionClassFilter extends AbstractFilter
 {
     protected $rules = array();
 
