@@ -134,7 +134,8 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
         $serializer->expects($this->once())
             ->method('serialize')
             ->with($data, $configuration->get('format'))
-            ->will($this->returnValue($serializedData));
+            ->will($this->returnValue($serializedData))
+        ;
 
         $adapter = $this->createMockAdapter();
         $adapter->expects($this->once())
@@ -155,6 +156,75 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
     /**
      * @test
      */
+    public function shouldSendEmptySubjectIfItWasNotSetBefore()
+    {
+        $emptySubject = null;
+        $exception = new \Exception;
+        $data = new DataHolder();
+
+        $configuration = new DataHolder();
+        $configuration->set('format', 'html');
+        $configuration->set('sender', 'valid@sender.com');
+        $configuration->set('recipients', array('john@doe.com'));
+        $configuration->set('headers', array('BB' => 'support@site.com'));
+
+        $serializer = $this->createMockSerializer();
+        $serializer->expects($this->any())->method('supportsSerialization')->will($this->returnValue(true));
+        $serializer->expects($this->any())->method('serialize');
+
+        $adapter = $this->createMockAdapter();
+        $adapter->expects($this->once())
+            ->method('send')
+            ->with(
+                $configuration->get('sender'),
+                $configuration->get('recipients'),
+                $emptySubject,
+                null,
+                $configuration->get('headers')
+            )
+        ;
+
+        $sender = new MailSender($adapter, $serializer, $configuration);
+        $sender->handle($exception, $data);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldSendEmptyHeadersListIfItWasNotSetBefore()
+    {
+        $emptyHeaderList = array();
+        $exception = new \Exception;
+        $data = new DataHolder();
+
+        $configuration = new DataHolder();
+        $configuration->set('format', 'html');
+        $configuration->set('sender', 'valid@sender.com');
+        $configuration->set('recipients', array('john@doe.com'));
+
+        $serializer = $this->createMockSerializer();
+        $serializer->expects($this->any())->method('supportsSerialization')->will($this->returnValue(true));
+        $serializer->expects($this->any())->method('serialize');
+
+        $adapter = $this->createMockAdapter();
+        $adapter->expects($this->once())
+            ->method('send')
+            ->with(
+                $configuration->get('sender'),
+                $configuration->get('recipients'),
+                null,
+                null,
+                $emptyHeaderList
+            )
+        ;
+
+        $sender = new MailSender($adapter, $serializer, $configuration);
+        $sender->handle($exception, $data);
+    }
+
+    /**
+     * @test
+     */
     public function shouldSendMailAndDelegateHandlingToNextChainNode()
     {
         $exception = new \Exception;
@@ -162,11 +232,11 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
         $configuration = $this->getFullConfiguration();
 
         $serializer = $this->createMockSerializer();
-        $serializer->expects($this->once())->method('supportsSerialization')->will($this->returnValue(true));
-        $serializer->expects($this->once())->method('serialize');
+        $serializer->expects($this->any())->method('supportsSerialization')->will($this->returnValue(true));
+        $serializer->expects($this->any())->method('serialize');
 
         $adapter = $this->createMockAdapter();
-        $adapter->expects($this->once())->method('send');
+        $adapter->expects($this->any())->method('send');
 
         $nextChainNode = $this->createMockChainNode();
         $nextChainNode->expects($this->once())->method('handle')->with($this->equalTo($exception), $this->equalTo($data));
