@@ -1,0 +1,1 @@
+# BadaBoom [![Build Status](https://secure.travis-ci.org/formapro/BadaBoom.png?branch=master)](http://travis-ci.org/formapro/BadaBoom)
