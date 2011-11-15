@@ -1,6 +1,6 @@
 [submodule "vendor/Symfony/Component/ClassLoader"]
 	path = vendor/Symfony/Component/ClassLoader
-	url = https://github.com/symfony/ClassLoader.git
+	url = git://github.com/symfony/ClassLoader.git
 [submodule "vendor/Symfony/Component/Serializer"]
 	path = vendor/Symfony/Component/Serializer
-	url = https://github.com/symfony/Serializer.git
+	url = git://github.com/symfony/Serializer.git
