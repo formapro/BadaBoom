@@ -7,6 +7,10 @@ php:
 before_script:
   - git submodule update --init
 
+branches:
+  only:
+    master
+
 notifications:
   email:
     - kotlyar.maksim@gmail.com
