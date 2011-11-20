@@ -1,0 +1,27 @@
+{
+    "name": "fp/BadaBoom",
+    "type": "library",
+    "description": "Wise error catcher",
+    "keywords": [],
+    "homepage": "http://github.com/formapro/BadaBoom",
+    "version": "0.0.1-DEV",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Vadim Tyukov",
+            "email": "brainreflex@gmail.com"
+        },
+        {
+            "name": "Maksim Kotlyar",
+            "email": "kotlyar.maksim@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.2",
+        "symfony/class-loader": "2.0.*",
+        "symfony/serializer": ">=2.0.6"
+    },
+    "autoload": {
+        "psr-0": { "BadaBoom\\Tests": "tests/", "BadaBoom": "src/" }
+    }
+}
