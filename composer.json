@@ -2,7 +2,7 @@
     "name": "fp/badaboom",
     "type": "library",
     "description": "Wise error catcher",
-    "keywords": [],
+    "keywords": ["error handler", "exception handler"],
     "homepage": "http://github.com/formapro/BadaBoom",
     "version": "0.0.1-DEV",
     "license": "MIT",
