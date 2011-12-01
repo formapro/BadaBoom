@@ -156,6 +156,42 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
     /**
      * @test
      */
+    public function shouldTakeSubjectFromHandledDataInsteadOfConfigurationValue()
+    {
+        $exception = new \Exception;
+
+        $data = new DataHolder();
+        $data->set('subject', 'Hey! There is an error.');
+
+        $configuration = new DataHolder();
+        $configuration->set('format', 'html');
+        $configuration->set('sender', 'valid@sender.com');
+        $configuration->set('recipients', array('john@doe.com'));
+        $configuration->set('subject', 'Static subject from config');
+
+        $serializer = $this->createMockSerializer();
+        $serializer->expects($this->any())->method('supportsSerialization')->will($this->returnValue(true));
+        $serializer->expects($this->any())->method('serialize');
+
+        $adapter = $this->createMockAdapter();
+        $adapter->expects($this->once())
+            ->method('send')
+            ->with(
+                $configuration->get('sender'),
+                $configuration->get('recipients'),
+                $data->get('subject'),
+                null,
+                array()
+            )
+        ;
+
+        $sender = new MailSender($adapter, $serializer, $configuration);
+        $sender->handle($exception, $data);
+    }
+
+    /**
+     * @test
+     */
     public function shouldSendEmptySubjectIfItWasNotSetBefore()
     {
         $emptySubject = null;
@@ -281,6 +317,7 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @static
+     *
      * @return array
      */
     public static function provideInvalidMail()

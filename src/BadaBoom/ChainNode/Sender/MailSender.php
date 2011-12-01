@@ -2,8 +2,9 @@
 
 namespace BadaBoom\ChainNode\Sender;
 
-use BadaBoom\Adapter\Mailer\MailerAdapterInterface;
 use Symfony\Component\Serializer\SerializerInterface;
+
+use BadaBoom\Adapter\Mailer\MailerAdapterInterface;
 use BadaBoom\DataHolder\DataHolderInterface;
 
 class MailSender extends AbstractSender
@@ -30,11 +31,12 @@ class MailSender extends AbstractSender
     public function handle(\Exception $exception, DataHolderInterface $data)
     {
         $serializedData = $this->serialize($data);
+        $subject = $data->get('subject', $this->configuration->get('subject'));
 
         $this->adapter->send(
             $this->configuration->get('sender'),
             $this->configuration->get('recipients'),
-            $this->configuration->get('subject'),
+            $subject,
             $serializedData,
             $this->configuration->get('headers', array())
         );
@@ -43,7 +45,7 @@ class MailSender extends AbstractSender
     }
 
     /**
-     * @throws \InvalidArgumentException
+     * @throws \InvalidArgumentException if sender var_export($recipients, true)
      *
      * @param string $sender
      *
@@ -57,7 +59,8 @@ class MailSender extends AbstractSender
     }
 
     /**
-     * @throws \InvalidArgumentException
+     * @throws \InvalidArgumentException if recipients list is empty
+     * @throws \InvalidArgumentException if recipients list has at least one invalid recipient
      *
      * @param array $recipients
      *
@@ -73,13 +76,15 @@ class MailSender extends AbstractSender
             if (true == is_string($recipient) && $this->isValidMail($recipient)) {
                 continue;
             }
-            throw new \InvalidArgumentException('Given recipient list ' . var_export($recipient, true) . ' is invalid');
+            throw new \InvalidArgumentException(
+                'Given recipients list ' . var_export($recipients, true) . ' has invalid recipient '. var_export($recipient, true)
+            );
         }
     }
 
     /**
      * @param $mail
-     * 
+     *
      * @return boolean
      */
     protected function isValidMail($mail)
