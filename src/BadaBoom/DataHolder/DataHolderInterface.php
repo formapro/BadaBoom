@@ -10,25 +10,23 @@ namespace BadaBoom\DataHolder;
 interface DataHolderInterface extends \IteratorAggregate
 {
     /**
-     *
      * @param string $name
-     * @param mixed
+     * @param mixed $value
      *
      * @return void
      */
     public function set($name, $value);
 
     /**
+     * @param $name
+     * @param null|mixed $default
      *
-     * @param string $name
-     *
-     * @return mixed
+     * @return void
      */
-    public function get($name);
+    public function get($name, $default = null);
 
     /**
-     *
-     * @param string
+     * @param string $name
      *
      * @return boolean
      */
