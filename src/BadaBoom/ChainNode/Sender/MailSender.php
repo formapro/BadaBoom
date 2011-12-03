@@ -45,7 +45,7 @@ class MailSender extends AbstractSender
     }
 
     /**
-     * @throws \InvalidArgumentException if sender var_export($recipients, true)
+     * @throws \InvalidArgumentException If the sender does not fit in a mail format
      *
      * @param string $sender
      *
@@ -76,9 +76,12 @@ class MailSender extends AbstractSender
             if (true == is_string($recipient) && $this->isValidMail($recipient)) {
                 continue;
             }
-            throw new \InvalidArgumentException(
-                'Given recipients list ' . var_export($recipients, true) . ' has invalid recipient '. var_export($recipient, true)
-            );
+
+            throw new \InvalidArgumentException(sprintf(
+                'Given recipients list %s has invalid recipient %s',
+                var_export($recipients, true),
+                var_export($recipient, true)
+            ));
         }
     }
 
