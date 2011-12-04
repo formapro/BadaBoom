@@ -2,13 +2,31 @@
 
 namespace BadaBoom\Tests\Adapter\Mailer;
 
-require 'FunctionStubHelper.php';
+use Fumocker\Fumocker;
 
 use BadaBoom\Tests\FunctionCallbackRegistry;
 use BadaBoom\Adapter\Mailer\NativeMailerAdapter;
 
 class NativeMailerAdapterTestCase extends \PHPUnit_Framework_TestCase
 {
+    /**
+     * @var Fumocker\Fumocker
+     */
+    protected $fumocker;
+
+    public function setUp()
+    {
+        $this->fumocker = new Fumocker;
+    }
+
+    /**
+     * @return void
+     */
+    public function tearDown()
+    {
+        $this->fumocker->cleanup();
+    }
+
     /**
      * @test
      */
@@ -28,25 +46,20 @@ class NativeMailerAdapterTestCase extends \PHPUnit_Framework_TestCase
         $subject = 'Mail subject';
         $content = 'Hey! You have an error at line #1';
 
-        $receivedArguments = array();
-        $functionCalls = 0;
-        FunctionCallbackRegistry::getInstance()->registerCallback('mail', function() use(&$receivedArguments, &$functionCalls){
-            $receivedArguments = func_get_args();
-            $functionCalls++;
-        });
+        $mail_mock = $this->fumocker->getMock('BadaBoom\Adapter\Mailer', 'mail');
+        $mail_mock
+            ->expects($this->once())
+            ->method('mail')
+            ->with(
+                $this->equalTo($to[0]),
+                $this->equalTo($subject),
+                $this->equalTo($content),
+                $this->stringContains(sprintf("From: %s \r\n", $from))
+            )
+        ;
 
         $adapter = new NativeMailerAdapter();
         $adapter->send($from, $to, $subject, $content);
-
-        $this->assertEquals(1, $functionCalls);
-
-        $this->assertEquals($to[0], $receivedArguments[0]);
-        $this->assertEquals($subject, $receivedArguments[1]);
-        $this->assertEquals($content, $receivedArguments[2]);
-        $this->assertContains(
-            sprintf("From: %s \r\n", $from),
-            $receivedArguments[3]
-        );
     }
 
     /**
@@ -58,20 +71,20 @@ class NativeMailerAdapterTestCase extends \PHPUnit_Framework_TestCase
     {
         $headers = array('reply-to' => 'another');
 
-        $receivedArguments = array();
-        $functionCalls = 0;
-        FunctionCallbackRegistry::getInstance()->registerCallback('mail', function() use(&$receivedArguments, &$functionCalls){
-            $receivedArguments = func_get_args();
-            $functionCalls++;
-        });
+        $mail_mock = $this->fumocker->getMock('BadaBoom\Adapter\Mailer', 'mail');
+        $mail_mock
+            ->expects($this->once())
+            ->method('mail')
+            ->with(
+                $this->anything(),
+                $this->anything(),
+                $this->anything(),
+                $this->stringContains(sprintf("Reply-To: %s \r\n", $headers['reply-to']))
+            )
+        ;
 
         $adapter = new NativeMailerAdapter();
         $adapter->send('from', array('to'), 'subject', 'content', $headers);
-
-        $this->assertContains(
-            sprintf("Reply-To: %s \r\n", $headers['reply-to']),
-            $receivedArguments[3]
-        );
     }
 
     /**
@@ -84,39 +97,24 @@ class NativeMailerAdapterTestCase extends \PHPUnit_Framework_TestCase
         $subject = 'Mail subject';
         $content = 'Hey! You have an error at line #1';
 
-        $receivedArguments = array();
-        $functionCalls = 0;
-        FunctionCallbackRegistry::getInstance()->registerCallback('mail', function() use(&$receivedArguments, &$functionCalls){
-            $args = func_get_args();
-            $receivedArguments[] = array(
-                'to'      => $args[0],
-                'subject' => $args[1],
-                'content' => $args[2],
-                'headers' => $args[3],
-            );
-            $functionCalls++;
-        });
+        $mail_mock = $this->fumocker->getMock('BadaBoom\Adapter\Mailer', 'mail');
+        $mail_mock
+            ->expects($this->exactly(3))
+            ->method('mail')
+            ->with(
+                $this->logicalOr(
+                    $this->equalTo($to[0]),
+                    $this->equalTo($to[1]),
+                    $this->equalTo($to[2])
+                ),
+                $this->equalTo($subject),
+                $this->equalTo($content),
+                $this->stringContains(sprintf("From: %s \r\n", $from))
+            )
+        ;
 
         $adapter = new NativeMailerAdapter();
         $adapter->send($from, $to, $subject, $content);
-
-        $this->assertEquals(count($to), $functionCalls);
-
-        $this->assertNotEquals($receivedArguments[0]['to'], $receivedArguments[1]['to']);
-        $this->assertEquals($to[0], $receivedArguments[0]['to']);
-        $this->assertEquals($to[1], $receivedArguments[1]['to']);
-
-        $this->assertEquals($receivedArguments[0]['subject'], $receivedArguments[1]['subject']);
-        $this->assertEquals($subject, $receivedArguments[0]['subject']);
-
-        $this->assertEquals($receivedArguments[0]['content'], $receivedArguments[1]['content']);
-        $this->assertEquals($content, $receivedArguments[0]['content']);
-
-        $this->assertEquals($receivedArguments[0]['headers'], $receivedArguments[1]['headers']);
-        $this->assertContains(
-            sprintf("From: %s \r\n", $from),
-            $receivedArguments[0]['headers']
-        );
     }
 
     /**
@@ -126,37 +124,29 @@ class NativeMailerAdapterTestCase extends \PHPUnit_Framework_TestCase
      */
     public function shouldSendMailsWithAdditionalHeadersAsManyTimesAsThereAreRecipients()
     {
+        $from = 'me';
         $to = array('you', 'we', 'they');
+        $subject = 'Mail subject';
+        $content = 'Hey! You have an error at line #1';
         $headers = array('reply-to' => 'another');
 
-        $receivedArguments = array();
-        $functionCalls = 0;
-        FunctionCallbackRegistry::getInstance()->registerCallback('mail', function() use(&$receivedArguments, &$functionCalls){
-            $args = func_get_args();
-            $receivedArguments[] = array(
-                'headers' => $args[3],
-            );
-            $functionCalls++;
-        });
+        $mail_mock = $this->fumocker->getMock('BadaBoom\Adapter\Mailer', 'mail');
+        $mail_mock
+            ->expects($this->exactly(3))
+            ->method('mail')
+            ->with(
+                $this->logicalOr(
+                    $this->equalTo($to[0]),
+                    $this->equalTo($to[1]),
+                    $this->equalTo($to[2])
+                ),
+                $this->equalTo($subject),
+                $this->equalTo($content),
+                $this->stringContains(sprintf("Reply-To: %s \r\n", $headers['reply-to']))
+            )
+        ;
 
         $adapter = new NativeMailerAdapter();
-        $adapter->send('from', $to, 'subject', 'content', $headers);
-
-        $this->assertEquals(count($to), $functionCalls);
-
-        $this->assertContains(
-            sprintf("Reply-To: %s \r\n", $headers['reply-to']),
-            $receivedArguments[0]['headers']
-        );
-
-        $this->assertContains(
-            sprintf("Reply-To: %s \r\n", $headers['reply-to']),
-            $receivedArguments[1]['headers']
-        );
-
-        $this->assertContains(
-            sprintf("Reply-To: %s \r\n", $headers['reply-to']),
-            $receivedArguments[2]['headers']
-        );
+        $adapter->send($from, $to, $subject, $content, $headers);
     }
 }
