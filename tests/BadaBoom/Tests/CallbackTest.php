@@ -24,7 +24,7 @@ class CallbackTest extends \PHPUnit_Framework_TestCase
         $chain = $this->createMockChainNode();
         $callback = new Callback($chain);
 
-        $callback->handleException(new \Exception());
+        $callback(new \Exception());
     }
 
     /**
@@ -38,7 +38,7 @@ class CallbackTest extends \PHPUnit_Framework_TestCase
 
         $callback = new Callback($chain);
 
-        $callback->handleException(new \Exception());
+        $callback(new \Exception());
     }
 
     /**
@@ -60,7 +60,7 @@ class CallbackTest extends \PHPUnit_Framework_TestCase
 
         $callback = new Callback($chain);
 
-        $callback->handleException($expectedException);
+        $callback($expectedException);
     }
 
     /**
@@ -81,7 +81,7 @@ class CallbackTest extends \PHPUnit_Framework_TestCase
 
         $callback = new Callback($chain);
 
-        $callback->handleException(new \Exception());
+        $callback(new \Exception());
     }
 
     /**
