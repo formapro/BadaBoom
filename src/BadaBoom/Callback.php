@@ -26,7 +26,7 @@ class Callback
      *
      * @param \Exception $exception
      */
-    public function handleException(\Exception $exception)
+    public function __invoke(\Exception $exception)
     {
         $data = new DataHolder();
 
