@@ -47,8 +47,11 @@ class NativeLoggerAdapterTestCase extends \PHPUnit_Framework_TestCase
 
     /**
      * @test
+     *
+     * @expectedException InvalidArgumentException
+     * @expectedExceptionMessage The destination type can not be resolved for destination
      */
-    public function shouldAllowPassDestinationToConstructor()
+    public function throwIfDestinationHasUnsolvedType()
     {
         new NativeLoggerAdapter('sdfasdf');
     }
@@ -59,13 +62,14 @@ class NativeLoggerAdapterTestCase extends \PHPUnit_Framework_TestCase
     public function shouldLogThroughSystemLoggerIfDestinationWasNotSet()
     {
         $log = 'Log!';
+        $expectedDestinationType = 0;
 
         $logger = new NativeLoggerAdapter();
 
         $this->fumocker->getMock('BadaBoom\Adapter\Logger', 'error_log')
             ->expects($this->once())
             ->method('error_log')
-            ->with($log, 0, null)
+            ->with($log, $expectedDestinationType, null)
         ;
 
         $logger->log($log, 'status');
@@ -78,11 +82,12 @@ class NativeLoggerAdapterTestCase extends \PHPUnit_Framework_TestCase
     {
         $mail   = 'my@mail.com';
         $log    = 'log me';
+        $expectedDestinationType  = 1;
 
         $this->fumocker->getMock('BadaBoom\Adapter\Logger', 'error_log')
             ->expects($this->once())
             ->method('error_log')
-            ->with($log, 1, $mail)
+            ->with($log, $expectedDestinationType, $mail)
         ;
 
         $logger = new NativeLoggerAdapter($mail);
@@ -94,63 +99,38 @@ class NativeLoggerAdapterTestCase extends \PHPUnit_Framework_TestCase
      */
     public function shouldLogToExistingWritableFile()
     {
-        $file = '/log.txt';
+        $file = $this->createTempFile();
         $log  = 'log me';
-
-        $this->fumocker->getMock('BadaBoom\Adapter\Logger', 'is_file')
-            ->expects($this->once())
-            ->method('is_file')
-            ->with($file)
-            ->will($this->returnValue(true))
-        ;
-
-        $this->fumocker->getMock('BadaBoom\Adapter\Logger', 'is_writable')
-            ->expects($this->once())
-            ->method('is_writable')
-            ->with($file)
-            ->will($this->returnValue(true))
-        ;
+        $expectedDestinationType  = 3;
 
         $this->fumocker->getMock('BadaBoom\Adapter\Logger', 'error_log')
             ->expects($this->once())
             ->method('error_log')
-            ->with($log, 3, $file)
+            ->with($log, $expectedDestinationType, $file)
         ;
 
         $logger = new NativeLoggerAdapter($file);
         $logger->log($log, 'status');
+
+        unlink($file);
     }
 
     /**
      * @test
      */
-    public function shouldLogViaSystemLoggerIfGivenFileIsNotWritable()
+    public function throwIfGivenDestinationFileIsNotWritable()
     {
-        $file = '/log.txt';
-        $log  = 'log me';
+        $file = $this->createTempFile();
+        chmod($file, 000);
 
-        $this->fumocker->getMock('BadaBoom\Adapter\Logger', 'is_file')
-            ->expects($this->once())
-            ->method('is_file')
-            ->with($file)
-            ->will($this->returnValue(true))
-        ;
+        try {
+            new NativeLoggerAdapter($file);
+            $this->fail('Expected exception was not thrown.');
+        } catch (\InvalidArgumentException $e) {
+            $this->assertContains("The destination file '{$file}' is not writable", $e->getMessage());
+        }
 
-        $this->fumocker->getMock('BadaBoom\Adapter\Logger', 'is_writable')
-            ->expects($this->once())
-            ->method('is_writable')
-            ->with($file)
-            ->will($this->returnValue(false))
-        ;
-
-        $this->fumocker->getMock('BadaBoom\Adapter\Logger', 'error_log')
-            ->expects($this->once())
-            ->method('error_log')
-            ->with($log, 0, $file)
-        ;
-
-        $logger = new NativeLoggerAdapter($file);
-        $logger->log($log, 'status');
+        unlink($file);
     }
 
     /**
@@ -158,103 +138,59 @@ class NativeLoggerAdapterTestCase extends \PHPUnit_Framework_TestCase
      */
     public function shouldLogToNonexistentFileThatIsInWritableDir()
     {
-        $file = '/path/file.txt';
-        $dirname = '/path';
+        $dir = $this->createTempDir();
+        $file = $dir . DIRECTORY_SEPARATOR . 'log.txt';
         $log  = 'log me';
-
-        $this->fumocker->getMock('BadaBoom\Adapter\Logger', 'is_dir')
-            ->expects($this->once())
-            ->method('is_dir')
-            ->with($file)
-            ->will($this->returnValue(false))
-        ;
-
-        $this->fumocker->getMock('BadaBoom\Adapter\Logger', 'dirname')
-            ->expects($this->once())
-            ->method('dirname')
-            ->with($file)
-            ->will($this->returnValue($dirname))
-        ;
-
-        $this->fumocker->getMock('BadaBoom\Adapter\Logger', 'is_writable')
-            ->expects($this->once())
-            ->method('is_writable')
-            ->with($dirname)
-            ->will($this->returnValue(true))
-        ;
+        $expectedDestinationType = 3;
 
         $this->fumocker->getMock('BadaBoom\Adapter\Logger', 'error_log')
             ->expects($this->once())
             ->method('error_log')
-            ->with($log, 3, $file)
+            ->with($log, $expectedDestinationType, $file)
         ;
 
         $logger = new NativeLoggerAdapter($file);
         $logger->log($log, 'status');
+        
+        rmdir($dir);
     }
 
     /**
      * @test
      */
-    public function shouldLogViaSystemLoggerIfDestinationIsNonexistentFileThatIsInNotWritableDir()
+    public function throwIfDestinationIsNonexistentFileThatIsInNotWritableDir()
     {
-        $file = '/path/file.txt';
-        $dirname = '/path';
-        $log  = 'log me';
+        $dir = $this->createTempDir();
+        chmod($dir, '000');
+        
+        $file = $dir . DIRECTORY_SEPARATOR . 'log.txt';
 
-        $this->fumocker->getMock('BadaBoom\Adapter\Logger', 'is_dir')
-            ->expects($this->once())
-            ->method('is_dir')
-            ->with($file)
-            ->will($this->returnValue(false))
-        ;
+        try {
+            new NativeLoggerAdapter($file);
+            $this->fail('Expected exception was not thrown.');
+        } catch (\InvalidArgumentException $e) {
+            $this->assertContains('The destination type can not be resolved for destination', $e->getMessage());
+        }
 
-        $this->fumocker->getMock('BadaBoom\Adapter\Logger', 'dirname')
-            ->expects($this->once())
-            ->method('dirname')
-            ->with($file)
-            ->will($this->returnValue($dirname))
-        ;
+        rmdir($dir);
 
-        $this->fumocker->getMock('BadaBoom\Adapter\Logger', 'is_writable')
-            ->expects($this->once())
-            ->method('is_writable')
-            ->with($dirname)
-            ->will($this->returnValue(false))
-        ;
-
-        $this->fumocker->getMock('BadaBoom\Adapter\Logger', 'error_log')
-            ->expects($this->once())
-            ->method('error_log')
-            ->with($log, 0, $file)
-        ;
-
-        $logger = new NativeLoggerAdapter($file);
-        $logger->log($log, 'status');
     }
 
     /**
-     * @test
+     * @return string
      */
-    public function shouldLogViaSystemLoggerIfGivenDestinationIsUnsolved()
+    protected function createTempFile()
     {
-        $log = 'Log me';
-        $destination = 'some unsolved destination...';
+        return tempnam(sys_get_temp_dir() . DIRECTORY_SEPARATOR, uniqid());
+    }
 
-        // Safe mode: to be sure that checks will be completed
-        $this->fumocker->getMock('BadaBoom\Adapter\Logger', 'is_writable')
-            ->expects($this->once())
-            ->method('is_writable')
-            ->will($this->returnValue(false))
-        ;
-
-        $this->fumocker->getMock('BadaBoom\Adapter\Logger', 'error_log')
-            ->expects($this->once())
-            ->method('error_log')
-            ->with($log, 0, $destination)
-        ;
-
-        $logger = new NativeLoggerAdapter($destination);
-        $logger->log($log, 'status');
+    /**
+     * @return string
+     */
+    protected function createTempDir()
+    {
+        $dir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . uniqid();
+        mkdir($dir);
+        return $dir;
     }
 }

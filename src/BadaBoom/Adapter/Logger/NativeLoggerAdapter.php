@@ -9,57 +9,78 @@ class NativeLoggerAdapter implements LoggerAdapterInterface
      */
     protected $destination;
 
+    /**
+     * @var int
+     */
+    protected $destinationType;
+
+    /**
+     * @param string|null $destination
+     */
     public function __construct($destination = null)
     {
-        $this->destination = $destination;
+        $this->destinationType = $this->guessDestinationType($destination);
+        $this->destination     = $destination;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function log($content, $status)
+    public function log($content, $level)
     {
-        error_log($content, $this->getDestinationType(), $this->destination);
+        error_log($content, $this->destinationType, $this->destination);
     }
 
     /**
-     * @return int
+     * @return string
      */
-    protected function getDestinationType()
+    protected function guessDestinationType($destination)
     {
-        if (empty($this->destination)) {
+        if (empty($destination)) {
             return 0;
         }
 
-        if ($this->isMail()) {
+        if ($this->isMail($destination)) {
             return 1;
         }
 
-        if ($this->isFile()) {
+        if ($this->isFile($destination)) {
             return 3;
         }
 
-        return 0;
+        throw new \InvalidArgumentException(sprintf(
+            'The destination type can not be resolved for destination %s',
+            var_export($destination, true)
+        ));
     }
 
     /**
      * @return boolean
      */
-    protected function isMail()
+    protected function isMail($destination)
     {
-        return preg_match('|([a-z0-9_\.\-]{1,20})@([a-z0-9\.\-]{1,20})\.([a-z]{2,4})|is', $this->destination) ? true : false;
+        return preg_match('|([a-z0-9_\.\-]{1,20})@([a-z0-9\.\-]{1,20})\.([a-z]{2,4})|is', $destination) ? true : false;
     }
 
     /**
      * @return boolean
      */
-    protected function isFile()
+    protected function isFile($destination)
     {
-        if (is_file($this->destination)) {
-            return is_writable($this->destination) ? true : false;
+        $file = new \SplFileInfo($destination);
+
+        if ($file->isFile()) {
+            if ($file->isWritable()) {
+                return true;
+            }
+
+            throw new \InvalidArgumentException(sprintf(
+                'The destination file %s is not writable',
+                var_export($destination, true)
+            ));
         }
 
-        if (false == is_dir($this->destination) && is_writable(dirname($this->destination))) {
+        if (false == $file->isDir() && is_writable($file->getPath())) {
             return true;
         }
 
