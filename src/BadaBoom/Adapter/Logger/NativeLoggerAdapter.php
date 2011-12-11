@@ -80,8 +80,18 @@ class NativeLoggerAdapter implements LoggerAdapterInterface
             ));
         }
 
-        if (false == $file->isDir() && is_writable($file->getPath())) {
-            return true;
+
+        $dir = $file->getPath();
+        if (false == $file->isDir() && is_dir($dir)) {
+            if(is_writable($dir)) {
+                return true;
+            }
+
+            throw new \InvalidArgumentException(sprintf(
+                'The destination directory %s is not writable. The log file %s cannot be created',
+                var_export($dir, true),
+                var_export($file->getBasename(), true)
+            ));
         }
 
         return false;

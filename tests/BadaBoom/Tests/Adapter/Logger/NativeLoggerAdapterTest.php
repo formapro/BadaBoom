@@ -169,7 +169,10 @@ class NativeLoggerAdapterTestCase extends \PHPUnit_Framework_TestCase
             new NativeLoggerAdapter($file);
             $this->fail('Expected exception was not thrown.');
         } catch (\InvalidArgumentException $e) {
-            $this->assertContains('The destination type can not be resolved for destination', $e->getMessage());
+            $this->assertEquals(
+                "The destination directory '{$dir}' is not writable. The log file 'log.txt' cannot be created",
+                $e->getMessage()
+            );
         }
 
         rmdir($dir);
