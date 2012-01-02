@@ -6,12 +6,12 @@ use BadaBoom\ChainNode\AbstractChainNode;
 use BadaBoom\DataHolder\DataHolderInterface;
 use BadaBoom\Adapter\SenderAdapterInterface;
 
-use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Serializer\Serializer;
 
 abstract class AbstractSender extends AbstractChainNode
 {
     /**
-     * @var \Symfony\Component\Serializer\SerializerInterface
+     * @var \Symfony\Component\Serializer\Serializer
      */
     protected $serializer;
 
@@ -26,12 +26,11 @@ abstract class AbstractSender extends AbstractChainNode
     protected $adapter;
 
     /**
-     *
-     * @param SenderAdapterInterface $adapter
-     * @param SerializerInterface $serializer
-     * @param array $parameters
+     * @param \BadaBoom\Adapter\SenderAdapterInterface $adapter
+     * @param \Symfony\Component\Serializer\Serializer $serializer
+     * @param \BadaBoom\DataHolder\DataHolderInterface $configuration
      */
-    public function __construct(SenderAdapterInterface $adapter, SerializerInterface $serializer, DataHolderInterface $configuration)
+    public function __construct(SenderAdapterInterface $adapter, Serializer $serializer, DataHolderInterface $configuration)
     {
         $this->validateFormat($configuration->get('format'), $serializer);
 
@@ -54,17 +53,17 @@ abstract class AbstractSender extends AbstractChainNode
      * @throws \InvalidArgumentException
      *
      * @param string $format
-     * @param \Symfony\Component\Serializer\SerializerInterface $serializer
+     * @param \Symfony\Component\Serializer\Serializer $serializer
      * 
      * @return void
      */
-    protected function validateFormat($format, SerializerInterface $serializer)
+    protected function validateFormat($format, Serializer $serializer)
     {
         if(false == $format) {
             throw new \InvalidArgumentException('Mandatory field "format" is missing in the given configuration');
         }
 
-        if (false == $serializer->supportsSerialization($format)) {
+        if (false == $serializer->supportsEncoding($format)) {
             throw new \InvalidArgumentException(sprintf(
                 'Given format "%s" is not supported by serializer',
                 $format

@@ -5,6 +5,8 @@ namespace BadaBoom\Tests\ChainNode\Sender;
 use BadaBoom\ChainNode\Sender\MailSender;
 use BadaBoom\DataHolder\DataHolder;
 
+use Symfony\Component\Serializer\Serializer;
+
 class MailSenderTest extends \PHPUnit_Framework_TestCase
 {
     /**
@@ -103,7 +105,7 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
 
         $serializer = $this->createMockSerializer();
         $serializer->expects($this->once())
-            ->method('supportsSerialization')
+            ->method('supportsEncoding')
             ->with($format)
             ->will($this->returnValue(true))
         ;
@@ -125,17 +127,18 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
         $serializedData = 'Plain text';
         $configuration = $this->getFullConfiguration();
 
-        $serializer = $this->createMockSerializer();
-        $serializer->expects($this->once())
-            ->method('supportsSerialization')
+        $encoder = $this->getMock('Symfony\Component\Serializer\Encoder\EncoderInterface');
+        $encoder->expects($this->once())
+            ->method('supportsEncoding')
             ->with($configuration->get('format'))
             ->will($this->returnValue(true))
         ;
-        $serializer->expects($this->once())
-            ->method('serialize')
-            ->with($data, $configuration->get('format'))
+        $encoder->expects($this->once())
+            ->method('encode')
+            ->with(array(), $configuration->get('format'))
             ->will($this->returnValue($serializedData))
         ;
+        $serializer = new Serializer(array(), array($configuration->get('format') => $encoder));
 
         $adapter = $this->createMockAdapter();
         $adapter->expects($this->once())
@@ -169,9 +172,10 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
         $configuration->set('recipients', array('john@doe.com'));
         $configuration->set('subject', 'Static subject from config');
 
-        $serializer = $this->createMockSerializer();
-        $serializer->expects($this->any())->method('supportsSerialization')->will($this->returnValue(true));
-        $serializer->expects($this->any())->method('serialize');
+        $encoder = $this->getMock('Symfony\Component\Serializer\Encoder\EncoderInterface');
+        $encoder->expects($this->any())->method('supportsEncoding')->will($this->returnValue(true));
+        $encoder->expects($this->any())->method('encode');
+        $serializer = new Serializer(array(), array($configuration->get('format') => $encoder));
 
         $adapter = $this->createMockAdapter();
         $adapter->expects($this->once())
@@ -204,9 +208,10 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
         $configuration->set('recipients', array('john@doe.com'));
         $configuration->set('headers', array('BB' => 'support@site.com'));
 
-        $serializer = $this->createMockSerializer();
-        $serializer->expects($this->any())->method('supportsSerialization')->will($this->returnValue(true));
-        $serializer->expects($this->any())->method('serialize');
+        $encoder = $this->getMock('Symfony\Component\Serializer\Encoder\EncoderInterface');
+        $encoder->expects($this->any())->method('supportsEncoding')->will($this->returnValue(true));
+        $encoder->expects($this->any())->method('encode');
+        $serializer = new Serializer(array(), array($configuration->get('format') => $encoder));
 
         $adapter = $this->createMockAdapter();
         $adapter->expects($this->once())
@@ -238,9 +243,10 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
         $configuration->set('sender', 'valid@sender.com');
         $configuration->set('recipients', array('john@doe.com'));
 
-        $serializer = $this->createMockSerializer();
-        $serializer->expects($this->any())->method('supportsSerialization')->will($this->returnValue(true));
-        $serializer->expects($this->any())->method('serialize');
+        $encoder = $this->getMock('Symfony\Component\Serializer\Encoder\EncoderInterface');
+        $encoder->expects($this->any())->method('supportsEncoding')->will($this->returnValue(true));
+        $encoder->expects($this->any())->method('encode');
+        $serializer = new Serializer(array(), array($configuration->get('format') => $encoder));
 
         $adapter = $this->createMockAdapter();
         $adapter->expects($this->once())
@@ -267,9 +273,10 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
         $data = new DataHolder();
         $configuration = $this->getFullConfiguration();
 
-        $serializer = $this->createMockSerializer();
-        $serializer->expects($this->any())->method('supportsSerialization')->will($this->returnValue(true));
-        $serializer->expects($this->any())->method('serialize');
+        $encoder = $this->getMock('Symfony\Component\Serializer\Encoder\EncoderInterface');
+        $encoder->expects($this->any())->method('supportsEncoding')->will($this->returnValue(true));
+        $encoder->expects($this->any())->method('encode');
+        $serializer = new Serializer(array(), array($configuration->get('format') => $encoder));
 
         $adapter = $this->createMockAdapter();
         $adapter->expects($this->any())->method('send');
@@ -312,7 +319,7 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
      */
     protected function createMockSerializer()
     {
-        return $this->getMock('Symfony\Component\Serializer\SerializerInterface');
+        return $this->getMock('Symfony\Component\Serializer\Serializer');
     }
 
     /**

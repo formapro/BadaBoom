@@ -6,6 +6,9 @@ use Symfony\Component\Serializer\Encoder\EncoderInterface;
 
 class TextEncoder implements EncoderInterface
 {
+    /**
+     * {@inheritdoc}
+     */
     public function encode($data, $format)
     {
         $text = '';
@@ -19,6 +22,11 @@ class TextEncoder implements EncoderInterface
         return $text;
     }
 
+    /**
+     * @param array $value
+     *
+     * @return string
+     */
     protected function encodeValue(array $value)
     {
         $text = '';
@@ -27,5 +35,13 @@ class TextEncoder implements EncoderInterface
         }
 
         return $text;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function supportsEncoding($format)
+    {
+        return 'plain-text' === $format;
     }
 }
