@@ -4,6 +4,8 @@ namespace BadaBoom\Tests\ChainNode\Sender;
 
 use BadaBoom\DataHolder\DataHolder;
 
+use Symfony\Component\Serializer\Serializer;
+
 class AbstractSenderTestCase extends \PHPUnit_Framework_TestCase
 {
     /**
@@ -39,7 +41,7 @@ class AbstractSenderTestCase extends \PHPUnit_Framework_TestCase
 
         $serializer = $this->createMockSerializer();
         $serializer->expects($this->once())
-            ->method('supportsSerialization')
+            ->method('supportsEncoding')
             ->with($format)
             ->will($this->returnValue(true))
         ;
@@ -62,7 +64,7 @@ class AbstractSenderTestCase extends \PHPUnit_Framework_TestCase
         $format = 'unsupported-format';
         $serializer = $this->createMockSerializer();
         $serializer->expects($this->once())
-            ->method('supportsSerialization')
+            ->method('supportsEncoding')
             ->with($format)
             ->will($this->returnValue(false))
         ;
@@ -82,18 +84,16 @@ class AbstractSenderTestCase extends \PHPUnit_Framework_TestCase
         $data = new DataHolder();
         $format = 'html';
 
-        $serializer = $this->createMockSerializer();
-        $serializer->expects($this->once())
-            ->method('supportsSerialization')
+        $configuration = new DataHolder();
+        $configuration->set('format', $format);
+
+        $encoder = $this->getMock('Symfony\Component\Serializer\Encoder\EncoderInterface');
+        $encoder->expects($this->once())
+            ->method('supportsEncoding')
             ->with($format)
             ->will($this->returnValue(true))
         ;
-        $serializer->expects($this->once())
-            ->method('serialize')
-            ->with($data, $format)
-        ;
-        $configuration = new DataHolder();
-        $configuration->set('format', $format);
+        $serializer = new Serializer(array(), array($format => $encoder));
 
         $sender = $this->createSender($this->createMockAdapter(), $serializer, $configuration);
 
@@ -115,7 +115,7 @@ class AbstractSenderTestCase extends \PHPUnit_Framework_TestCase
      */
     protected function createMockSerializer()
     {
-        return $this->getMock('Symfony\Component\Serializer\SerializerInterface');
+        return $this->getMock('Symfony\Component\Serializer\Serializer');
     }
 
     /**
