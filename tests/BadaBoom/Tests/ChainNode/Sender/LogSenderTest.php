@@ -2,6 +2,8 @@
 
 namespace BadaBoom\Tests\ChainNode\Sender;
 
+use Symfony\Component\Serializer\Serializer;
+
 use BadaBoom\ChainNode\Sender\LogSender;
 use BadaBoom\DataHolder\DataHolder;
 
@@ -52,12 +54,18 @@ class LogSenderTestCase extends \PHPUnit_Framework_TestCase
 
         $this->assertNotEquals($configuration->get('log_level'), $data->get('log_level'));
 
-        $serializer = $this->createSerializerMock($configuration->get('format'));
-        $serializer->expects($this->once())
-            ->method('serialize')
-            ->with($data, $configuration->get('format'))
+        $encoder = $this->getMock('Symfony\Component\Serializer\Encoder\EncoderInterface');
+        $encoder->expects($this->once())
+            ->method('supportsEncoding')
+            ->with($configuration->get('format'))
+            ->will($this->returnValue(true))
+        ;
+        $encoder->expects($this->once())
+            ->method('encode')
+            ->with(array('log_level' => LogSender::CRITICAL), $configuration->get('format'))
             ->will($this->returnValue($serializedData))
         ;
+        $serializer = new Serializer(array(), array($configuration->get('format') => $encoder));
 
         $adapter = $this->getMock('BadaBoom\Adapter\Logger\LoggerAdapterInterface');
         $adapter->expects($this->once())
@@ -81,12 +89,14 @@ class LogSenderTestCase extends \PHPUnit_Framework_TestCase
         $data = new DataHolder();
         $serializedData = 'Hey! Log me.';
 
-        $serializer = $this->createSerializerMock($configuration->get('format'));
-        $serializer->expects($this->once())
-            ->method('serialize')
-            ->with($data, $configuration->get('format'))
+        $encoder = $this->getMock('Symfony\Component\Serializer\Encoder\EncoderInterface');
+        $encoder->expects($this->once())->method('supportsEncoding')->will($this->returnValue(true));
+        $encoder->expects($this->once())
+            ->method('encode')
+            ->with(array(), $configuration->get('format'))
             ->will($this->returnValue($serializedData))
         ;
+        $serializer = new Serializer(array(), array($configuration->get('format') => $encoder));
 
         $adapter = $this->getMock('BadaBoom\Adapter\Logger\LoggerAdapterInterface');
         $adapter->expects($this->once())
@@ -109,12 +119,14 @@ class LogSenderTestCase extends \PHPUnit_Framework_TestCase
         $data = new DataHolder();
         $serializedData = 'Hey! Log me.';
 
-        $serializer = $this->createSerializerMock($configuration->get('format'));
-        $serializer->expects($this->once())
-            ->method('serialize')
-            ->with($data, $configuration->get('format'))
+        $encoder = $this->getMock('Symfony\Component\Serializer\Encoder\EncoderInterface');
+        $encoder->expects($this->once())->method('supportsEncoding')->will($this->returnValue(true));
+        $encoder->expects($this->once())
+            ->method('encode')
+            ->with(array(), $configuration->get('format'))
             ->will($this->returnValue($serializedData))
         ;
+        $serializer = new Serializer(array(), array($configuration->get('format') => $encoder));
 
         $adapter = $this->getMock('BadaBoom\Adapter\Logger\LoggerAdapterInterface');
         $adapter->expects($this->once())
@@ -133,9 +145,9 @@ class LogSenderTestCase extends \PHPUnit_Framework_TestCase
      */
     protected function createSerializerMock($supportedFormat)
     {
-        $serializer = $this->getMock('Symfony\Component\Serializer\SerializerInterface');
+        $serializer = $this->getMock('Symfony\Component\Serializer\Serializer');
         $serializer->expects($this->any())
-            ->method('supportsSerialization')
+            ->method('supportsEncoding')
             ->with($supportedFormat)
             ->will($this->returnValue(true))
         ;
