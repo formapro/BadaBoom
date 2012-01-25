@@ -21,4 +21,13 @@ interface ChainNodeInterface
      * @return ChainNodeInterface
      */
     function nextNode(ChainNodeInterface $node);
+
+    /**
+     * Pushed a node after the current node, if the current node has next node the pushed will be set among them.
+     *
+     * @param ChainNodeInterface $pushedNode
+     *
+     * @return ChainNodeInterface a pushed node
+     */
+    function push(ChainNodeInterface $pushedNode);
 }
