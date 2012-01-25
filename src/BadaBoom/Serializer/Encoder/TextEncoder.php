@@ -16,7 +16,7 @@ class TextEncoder implements EncoderInterface
 
             $text .= ucfirst($key);
 
-            $text .= $this->encodeValue($value) . "\n\n";
+            $text .= is_array($value) ? $this->encodeArray($value) . "\n\n" : $this->encodeNotArray($value);
         }
 
         return $text;
@@ -27,14 +27,31 @@ class TextEncoder implements EncoderInterface
      *
      * @return string
      */
-    protected function encodeValue(array $value)
+    protected function encodeArray(array $value)
     {
         $text = '';
         foreach ($value as $key => $value) {
+            $value = (string) $value;
+            $value = trim($value);
+
             $text .= "\n\t" . ucfirst($key) . ': ' . str_replace("\n", "\n\t\t", $value);
         }
 
         return $text;
+    }
+
+    /**
+     * @param mixed $value
+     *
+     * @return string
+     */
+    protected function encodeNotArray($value)
+    {
+        $value = (string) $value;
+        $value = trim($value);
+        $value = str_replace("\n", "\n\t", $value);
+
+        return "\n\t{$value}\n";
     }
 
     /**

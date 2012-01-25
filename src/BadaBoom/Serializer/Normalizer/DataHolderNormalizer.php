@@ -9,44 +9,92 @@ use BadaBoom\DataHolder\DataHolderInterface;
 
 class DataHolderNormalizer implements NormalizerInterface
 {
-    public function normalize($object, $format = null)
+    /**
+     * {@inheritdoc}
+     */
+    public function normalize($data, $format = null)
     {
-        $result = array();
-        foreach ($object as $key => $value) {
-            if (false == is_array($value)) continue;
+        if (false == $this->supportsNormalization($data, $format)) {
+            throw new UnsupportedException(sprintf(
+                'Normalization of %s to format %s is not supported by this normalizer.',
+                gettype($data),
+                $format
+            ));
+        }
 
-            $result[$key] = $this->normalizeArray($value);
+        $result = array();
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                $result[$key] = $this->normalizeArray($value);
+            } else if (is_object($value)) {
+                $result[$key] = var_export($value, true);
+            } else if (is_scalar($value)){
+                $result[$key] = $this->normalizeScalar($value);
+            } else {
+                $result[$key] = var_export($value);
+            }
         }
 
         return $result;
     }
 
-    protected function normalizeArray(array $data)
+    /**
+     * @param array $data
+     *
+     * @return array
+     */
+    protected function normalizeArray(array $value)
     {
-        array_walk($data, function(&$item) {
+        array_walk($value, function(&$item) {
             if (is_object($item) || is_array($item)) {
                 $item = var_export($item, true);
             }
         });
 
-        return $data;
+        return $value;
     }
 
+    /**
+     * @param object $value
+     *
+     * @return string
+     */
+    protected function normalizeObject($value)
+    {
+        return var_export($value, true);
+    }
+
+    /**
+     * @param scalar $value
+     *
+     * @return string
+     */
+    protected function normalizeScalar($value)
+    {
+        return $value;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function denormalize($data, $class, $format = null)
     {
-
-
-        throw new UnsupportedException('Denormalization is not supported by this normalizer `'.__CLASS__.'`');
+        throw new UnsupportedException('Denormalization of any formats is not supported.');
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function supportsNormalization($data, $format = null)
     {
         return  $data instanceof DataHolderInterface;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function supportsDenormalization($data, $type, $format = null)
     {
         return false;
     }
 }
- 

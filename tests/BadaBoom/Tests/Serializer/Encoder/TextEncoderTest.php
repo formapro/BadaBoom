@@ -37,7 +37,7 @@ class TextEncoderTest extends \PHPUnit_Framework_TestCase
      * 
      * @test
      */
-    public function shouldCorrectlyEncodeScalars()
+    public function shouldCorrectlyEncodeScalarsInSubArrays()
     {
         $data = array(
             'foo' => array(
@@ -48,6 +48,74 @@ class TextEncoderTest extends \PHPUnit_Framework_TestCase
         );
 
         $expectedText = "Foo\n\tA: 1\n\tB: some str\n\nBar\n\tC: 2.3\n\n";
+
+        $encoder = new TextEncoder;
+
+        $this->assertEquals($expectedText, $encoder->encode($data, null));
+    }
+
+    /**
+     * @test
+     */
+    public function shouldTrimStringInSubArrays()
+    {
+        $data = array(
+            'subArray' => array(
+                'str1' => "\nsome str\t",
+                'str2' => "\t\nsome str",
+            ),
+        );
+
+        $expectedText = "SubArray\n\tStr1: some str\n\tStr2: some str\n\n";
+
+        $encoder = new TextEncoder;
+
+        $this->assertEquals($expectedText, $encoder->encode($data, null));
+    }
+
+    /**
+     * @test
+     */
+    public function shouldCorrectlyEncodeNotArraySection()
+    {
+        $data = array(
+            'foo' => 1,
+            'bar' => 'bar'
+        );
+
+        $expectedText = "Foo\n\t1\nBar\n\tbar\n";
+
+        $encoder = new TextEncoder;
+
+        $this->assertEquals($expectedText, $encoder->encode($data, null));
+    }
+
+    /**
+     * @test
+     */
+    public function shouldCorrectlyEncodeNotArrayStringWithEndLinesSpecialChars()
+    {
+        $data = array(
+            'str' => "foo\nbar",
+        );
+
+        $expectedText = "Str\n\tfoo\n\tbar\n";
+
+        $encoder = new TextEncoder;
+
+        $this->assertEquals($expectedText, $encoder->encode($data, null));
+    }
+
+    /**
+     * @test
+     */
+    public function shouldTrimString()
+    {
+        $data = array(
+            'str' => "\nfoo\t",
+        );
+
+        $expectedText = "Str\n\tfoo\n";
 
         $encoder = new TextEncoder;
 
