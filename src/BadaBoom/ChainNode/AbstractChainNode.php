@@ -33,4 +33,17 @@ abstract class AbstractChainNode implements ChainNodeInterface
     {
         return $this->nextNode = $node;
     }
+
+    /**
+     *
+     * {@inheritdoc}
+     */
+    public function push(ChainNodeInterface $pushedNode)
+    {
+        if ($currentNextNode = $this->nextNode) {
+            $pushedNode->nextNode($currentNextNode);
+        }
+
+        return $this->nextNode($pushedNode);
+    }
 }
