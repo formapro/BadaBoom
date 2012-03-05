@@ -25,7 +25,6 @@
     },
     "autoload": {
         "psr-0": {
-          "BadaBoom\\Tests": "tests/",
           "BadaBoom": "src/"
         }
     }
