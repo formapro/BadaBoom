@@ -12,7 +12,6 @@ class ExceptionSummaryProvider extends AbstractProvider
     protected $sectionName;
 
     /**
-     *
      * @param string $sectionName
      */
     public function __construct($sectionName = 'summary')
@@ -20,6 +19,9 @@ class ExceptionSummaryProvider extends AbstractProvider
         $this->sectionName = $sectionName;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function handle(\Exception $exception, DataHolderInterface $data)
     {
         $data->set($this->sectionName, array(
@@ -33,6 +35,9 @@ class ExceptionSummaryProvider extends AbstractProvider
         $this->handleNextNode($exception, $data);
     }
 
+    /**
+     * @return string
+     */
     protected function getUri()
     {
         $uri = 'undefined';
@@ -45,6 +50,11 @@ class ExceptionSummaryProvider extends AbstractProvider
         return $uri;
     }
 
+    /**
+     * @param \Exception $exception
+     *
+     * @return int|string
+     */
     protected function getCode(\Exception $exception)
     {
         return $exception instanceof \ErrorException ?
