@@ -7,6 +7,11 @@ use BadaBoom\ChainNode\Provider\ExceptionSummaryProvider;
 
 class ExceptionSummaryProviderTest extends \PHPUnit_Framework_TestCase
 {
+    protected function setUp()
+    {
+        unset($_SERVER['HTTP_HOST'], $_SERVER['REQUEST_URI'], $_SERVER['argv']);
+    }
+
     /**
      *
      * @test
@@ -64,15 +69,127 @@ class ExceptionSummaryProviderTest extends \PHPUnit_Framework_TestCase
         $this->assertInternalType('array', $summary);
 
         $this->assertArrayHasKey('class', $summary);
+        $this->assertArrayHasKey('uri', $summary);
         $this->assertArrayHasKey('code', $summary);
         $this->assertArrayHasKey('message', $summary);
         $this->assertArrayHasKey('file', $summary);
-
-        $this->assertEquals('Exception', $summary['class']);
-        $this->assertEquals(123, $summary['code']);
-        $this->assertEquals('foo', $summary['message']);
-        $this->assertContains('BadaBoom/Tests/ChainNode/Provider/ExceptionSummaryProviderTest.php', $summary['file']);
     }
+
+    /**
+     * @test
+     */
+    public function shouldSetUndefinedUriIfCannotGuess()
+    {
+        //guard
+        $this->assertArrayNotHasKey('HTTP_HOST', $_SERVER);
+        $this->assertArrayNotHasKey('REQUEST_URI', $_SERVER);
+        $this->assertArrayNotHasKey('argv', $_SERVER);
+
+        $exception = new \Exception('foo', 123);
+        $data = new DataHolder();
+
+        $provider = new ExceptionSummaryProvider();
+        $provider->handle($exception, $data);
+
+        $summary = $data->get('summary');
+
+        $this->assertEquals('undefined', $summary['uri']);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldSetRequestedUrlIfDefined()
+    {
+        $_SERVER['HTTP_HOST'] = 'badaboom.com';
+        $_SERVER['REQUEST_URI'] = '/exception.html?foo=foo&bar=bar';
+
+        $exception = new \Exception('foo', 123);
+        $data = new DataHolder();
+
+        $provider = new ExceptionSummaryProvider();
+        $provider->handle($exception, $data);
+
+        $summary = $data->get('summary');
+
+        $this->assertEquals('http://badaboom.com/exception.html?foo=foo&bar=bar', $summary['uri']);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldSetCommandLineIfDefined()
+    {
+        $_SERVER['argv'] = array(
+            'php',
+            'command',
+            'bar',
+            '--foo=foo',
+        );
+
+        $exception = new \Exception('foo', 123);
+        $data = new DataHolder();
+
+        $provider = new ExceptionSummaryProvider();
+        $provider->handle($exception, $data);
+
+        $summary = $data->get('summary');
+
+        $this->assertEquals('php command bar --foo=foo', $summary['uri']);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldSetCodeForNotErrorExceptions()
+    {
+        $expectedCode = 123;
+
+        $exception = new \Exception('foo', $expectedCode);
+        $data = new DataHolder();
+
+        $provider = new ExceptionSummaryProvider();
+        $provider->handle($exception, $data);
+
+        $summary = $data->get('summary');
+
+        $this->assertEquals($expectedCode, $summary['code']);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldSetHumanReadableSeverityForErrorException()
+    {
+        $exception = new \ErrorException('foo', $code = 123, E_COMPILE_ERROR, $file = 'foo', $line = 123);
+        $data = new DataHolder();
+
+        $provider = new ExceptionSummaryProvider();
+        $provider->handle($exception, $data);
+
+        $summary = $data->get('summary');
+
+        $this->assertEquals('E_COMPILE_ERROR', $summary['code']);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldSetUnknownHumanReadableSeverityForNotStandardErrorException()
+    {
+        $notStandardSeverity = 556234;
+
+        $exception = new \ErrorException('foo', $code = 123, $notStandardSeverity, $file = 'foo', $line = 123);
+        $data = new DataHolder();
+
+        $provider = new ExceptionSummaryProvider();
+        $provider->handle($exception, $data);
+
+        $summary = $data->get('summary');
+
+        $this->assertEquals('E_UNKNOWN', $summary['code']);
+    }
+
 
     /**
      *
