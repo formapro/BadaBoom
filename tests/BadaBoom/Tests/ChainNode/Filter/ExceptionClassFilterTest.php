@@ -1,5 +1,4 @@
 <?php
-
 namespace BadaBoom\Tests\ChainNode\Filter;
 
 use BadaBoom\ChainNode\Filter\ExceptionClassFilter;
@@ -18,7 +17,6 @@ class ExceptionClassFilterTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     *
      * @test
      */
     public function shouldBeSubClassOfAbstractFilter()
@@ -39,7 +37,6 @@ class ExceptionClassFilterTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     *
      * @test
      *
      * @expectedException InvalidArgumentException
@@ -53,7 +50,6 @@ class ExceptionClassFilterTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     *
      * @test
      *
      * @expectedException InvalidArgumentException
@@ -67,7 +63,6 @@ class ExceptionClassFilterTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     *
      * @test
      */
     public function shouldAllowToSetDeniedClasses()
@@ -78,7 +73,6 @@ class ExceptionClassFilterTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     *
      * @test
      *
      * @expectedException InvalidArgumentException
@@ -92,7 +86,6 @@ class ExceptionClassFilterTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     *
      * @test
      *
      * @expectedException InvalidArgumentException
@@ -106,14 +99,37 @@ class ExceptionClassFilterTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     *
      * @test
      */
-    public function shouldDenyByDefault()
+    public function shouldAllowPropagationByDefault()
     {
         $filter = new ExceptionClassFilter();
 
-        $this->assertFalse($filter->filter(new \Exception, new DataHolder));
+        $this->assertTrue($filter->shouldContinue(new \Exception, new DataHolder));
+    }
+
+    /**
+     * @test
+     */
+    public function shouldAllowDefinePropagateAll()
+    {
+        $filter = new ExceptionClassFilter();
+
+        $filter->allowAll();
+
+        $this->assertTrue($filter->shouldContinue(new \Exception(), new DataHolder()));
+    }
+
+    /**
+     * @test
+     */
+    public function shouldAllowDefineNotPropagateAll()
+    {
+        $filter = new ExceptionClassFilter();
+
+        $filter->denyAll();
+
+        $this->assertFalse($filter->shouldContinue(new \Exception(), new DataHolder()));
     }
 
     /**
@@ -132,7 +148,7 @@ class ExceptionClassFilterTest extends \PHPUnit_Framework_TestCase
         $filter->deny('BadFunctionCallException');
 
         //SUT
-        $result = $filter->filter(new $exceptionClass, new DataHolder());
+        $result = $filter->shouldContinue(new $exceptionClass, new DataHolder());
 
         $this->assertEquals($expectedResult, $result, $failMessage);
     }
@@ -153,7 +169,7 @@ class ExceptionClassFilterTest extends \PHPUnit_Framework_TestCase
         $filter->allow('Exception');
 
         //SUT
-        $result = $filter->filter(new $exceptionClass, new DataHolder());
+        $result = $filter->shouldContinue(new $exceptionClass, new DataHolder());
 
         $this->assertEquals($expectedResult, $result, $failMessage);
     }
@@ -169,7 +185,7 @@ class ExceptionClassFilterTest extends \PHPUnit_Framework_TestCase
         $filter->deny('Exception');
         $filter->allow('Exception');
 
-        $this->assertTrue($filter->filter(new \Exception, new DataHolder));
+        $this->assertTrue($filter->shouldContinue(new \Exception, new DataHolder));
     }
 
     protected function createMockChainNode()

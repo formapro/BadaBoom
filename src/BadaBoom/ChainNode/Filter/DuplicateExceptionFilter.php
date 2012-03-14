@@ -1,5 +1,4 @@
 <?php
-
 namespace BadaBoom\ChainNode\Filter;
 
 use BadaBoom\Adapter\Cache\CacheAdapterInterface;
@@ -28,10 +27,9 @@ class DuplicateExceptionFilter extends AbstractFilter
     }
 
     /**
-     * 
      * {@inheritdoc}
      */
-    public function filter(\Exception $exception, DataHolderInterface $data)
+    public function shouldContinue(\Exception $exception, DataHolderInterface $data)
     {
         $cacheId = $this->generateCacheId($exception);
         if ($this->cache->contains($cacheId)) {
@@ -39,7 +37,7 @@ class DuplicateExceptionFilter extends AbstractFilter
         }
 
         $this->cache->save($cacheId, 1, $this->lifeTime);
-        
+
         return true;
     }
 

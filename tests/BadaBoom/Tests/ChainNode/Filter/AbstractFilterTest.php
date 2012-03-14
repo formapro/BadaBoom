@@ -1,5 +1,4 @@
 <?php
-
 namespace BadaBoom\Tests\ChainNode\Filter;
 
 use BadaBoom\DataHolder\DataHolder;
@@ -7,17 +6,15 @@ use BadaBoom\DataHolder\DataHolder;
 class AbstractFilterTest extends \PHPUnit_Framework_TestCase
 {
     /**
-     *
      * @test
      */
-    public function shouldNotBeInstanciable()
+    public function shouldNotBeInstantiable()
     {
         $rc = new \ReflectionClass('BadaBoom\ChainNode\Filter\AbstractFilter');
         $this->assertFalse($rc->isInstantiable());
     }
 
     /**
-     *
      * @test
      */
     public function shouldBeSubclassOfAbstractChainNode()
@@ -27,83 +24,64 @@ class AbstractFilterTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     *
      * @test
      */
-    public function shouldAllowToFilter()
+    public function shouldDecideWhetherExecutionShouldContinueOrNot()
     {
         $filter = $this->createMockFilter();
 
-        $filter->filter(new \Exception, new DataHolder);
+        $filter->shouldContinue(new \Exception, new DataHolder);
     }
 
     /**
-     *
      * @test
      */
-    public function shouldProxyDataFromHandleToFilter()
-    {
-        $exception = new \Exception('foo');
-        $data = new DataHolder();
-
-        $filter = $this->createMockFilter();
-        $filter->expects($this->once())->method('filter')->with($this->equalTo($exception), $this->equalTo($data));
-
-        $filter->handle($exception, $data);
-    }
-
-    /**
-     *
-     * @test
-     */
-    public function shouldHandleNextNodeIfFiltrationPassed()
+    public function shouldContinuePropagationPassExceptionAndDataToNextNodeIfShouldContinueReturnTrue()
     {
         $exception = new \Exception('foo');
         $data = new DataHolder();
 
         $nextNode = $this->createMockChainNode();
-        $nextNode->expects($this->once())->method('handle');
+        $nextNode
+            ->expects($this->once())
+            ->method('handle')
+            ->with(
+                $this->equalTo($exception),
+                $this->equalTo($data)
+            )
+        ;
 
         $filter = $this->createMockFilter();
-        $filter->expects($this->atLeastOnce())->method('filter')->will($this->returnValue(true));
+        $filter
+                ->expects($this->atLeastOnce())
+                ->method('shouldContinue')
+                ->will($this->returnValue(true))
+        ;
         $filter->nextNode($nextNode);
 
         $filter->handle($exception, $data);
     }
 
     /**
-     *
      * @test
      */
-    public function shouldHandleNextNodeAndPassExceptionAndHolderToIt()
+    public function shouldNotContinuePropagationIfShouldContinueReturnFalse()
     {
         $exception = new \Exception('foo');
         $data = new DataHolder();
 
         $nextNode = $this->createMockChainNode();
-        $nextNode->expects($this->once())->method('handle')->with($this->equalTo($exception), $this->equalTo($data));
+        $nextNode
+                ->expects($this->never())
+                ->method('handle')
+        ;
 
         $filter = $this->createMockFilter();
-        $filter->expects($this->atLeastOnce())->method('filter')->will($this->returnValue(true));
-        $filter->nextNode($nextNode);
-
-        $filter->handle($exception, $data);
-    }
-
-    /**
-     *
-     * @test
-     */
-    public function shouldNotHandleNextNodeIfFiltrationNotPassed()
-    {
-        $exception = new \Exception('foo');
-        $data = new DataHolder();
-
-        $nextNode = $this->createMockChainNode();
-        $nextNode->expects($this->never())->method('handle');
-
-        $filter = $this->createMockFilter();
-        $filter->expects($this->atLeastOnce())->method('filter')->will($this->returnValue(false));
+        $filter
+                ->expects($this->atLeastOnce())
+                ->method('shouldContinue')
+                ->will($this->returnValue(false))
+        ;
         $filter->nextNode($nextNode);
 
         $filter->handle($exception, $data);
