@@ -43,7 +43,6 @@ class SapiFilterTest extends \PHPUnit_Framework_TestCase
         $filter = new SapiFilter();
 
         $this->assertTrue($filter->shouldContinue(new \Exception(), new DataHolder()));
-        $this->assertTrue($filter->shouldContinue(new \Exception(), new DataHolder()));
     }
 
     /**
