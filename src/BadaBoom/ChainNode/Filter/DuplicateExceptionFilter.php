@@ -27,21 +27,8 @@ class DuplicateExceptionFilter extends AbstractFilter
     }
 
     /**
-     * 
      * {@inheritdoc}
      */
-    public function filter(\Exception $exception, DataHolderInterface $data)
-    {
-        $cacheId = $this->generateCacheId($exception);
-        if ($this->cache->contains($cacheId)) {
-            return false;
-        }
-
-        $this->cache->save($cacheId, 1, $this->lifeTime);
-        
-        return true;
-    }
-
     public function shouldContinue(\Exception $exception, DataHolderInterface $data)
     {
         $cacheId = $this->generateCacheId($exception);

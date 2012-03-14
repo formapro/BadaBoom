@@ -21,6 +21,8 @@ abstract class AbstractFilter extends AbstractChainNode
      *
      * @param \Exception $exception
      * @param \BadaBoom\DataHolder\DataHolderInterface $data
+     *
+     * @return boolean
      */
     abstract public function shouldContinue(\Exception $exception, DataHolderInterface $data);
 }

@@ -36,32 +36,7 @@ class AbstractFilterTest extends \PHPUnit_Framework_TestCase
     /**
      * @test
      */
-    public function shouldContinuePropagationIfShouldContinueReturnTrue()
-    {
-        $exception = new \Exception('foo');
-        $data = new DataHolder();
-
-        $nextNode = $this->createMockChainNode();
-        $nextNode
-            ->expects($this->once())
-            ->method('handle')
-        ;
-
-        $filter = $this->createMockFilter();
-        $filter
-            ->expects($this->atLeastOnce())
-            ->method('shouldContinue')
-            ->will($this->returnValue(true))
-        ;
-        $filter->nextNode($nextNode);
-
-        $filter->handle($exception, $data);
-    }
-
-    /**
-     * @test
-     */
-    public function shouldPassExceptionAndDataToNextNodeIfShouldContinueReturnTrue()
+    public function shouldContinuePropagationPassExceptionAndDataToNextNodeIfShouldContinueReturnTrue()
     {
         $exception = new \Exception('foo');
         $data = new DataHolder();
