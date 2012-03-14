@@ -34,45 +34,147 @@ class DataHolderNormalizerTest extends \PHPUnit_Framework_TestCase
         );
     }
 
-    public static function provideNormalizationData()
+    /**
+     * @test
+     */
+    public function shouldNormalizeEmtpyDataHolderAsEmptyArray()
     {
-        $noArrayDataHolder = new DataHolder();
-        $noArrayDataHolder->set('foo', 123);
-        $noArrayDataHolder->set('bar', 'bar');
-        $noArrayDataHolder->set('bar2', 2.3);
-        $noArrayDataHolder->set('foo2', new \stdClass());
-        $noArrayDataHolder->set('exception', new \Exception('err'));
-        $expectedNoArray = array();
+        $data = new DataHolder();
 
-        $arrayDataHolder = new DataHolder();
-        $arrayDataHolder->set('foo', array());
-        $expectedArray = array('foo' => array());
+        $normalizer = new DataHolderNormalizer;
 
-        $arrayWithScalarsDataHolder = new DataHolder();
-        $arrayWithScalarsDataHolder->set('foo', array('foo' => 'foo', 'bar' => 123));
-        $expectedArrayWithScalars = array('foo' => array('foo' => 'foo', 'bar' => 123));
+        $this->assertEquals(array(), $normalizer->normalize($data));
+    }
 
-        $arrayWithObjectDataHolder = new DataHolder();
-        $arrayWithObjectDataHolder->set('foo', array('obj' => new \stdClass()));
-        $expectedArrayWithObject = array('foo' => array('obj' => var_export(new \stdClass(), true)));
+    /**
+     * @test
+     */
+    public function shouldLeaveScalarsValuesAsIs()
+    {
+        $data = new DataHolder();
+        $data->set('int', 555);
+        $data->set('str', 'bar');
+        $data->set('flt', 1.11);
 
-        $arrayWithSubArrayDataHolder = new DataHolder();
-        $arrayWithSubArrayDataHolder->set('foo', array('sub' => array('a' => 'b')));
-        $expectedArrayWithSubArray = array('foo' => array('sub' => var_export(array('a' => 'b'), true)));
+        $normalizer = new DataHolderNormalizer;
 
-
-        return array(
-            array(new DataHolder(), array(), 'An empty DataHolder should be converted to an empty array'),
-            array($noArrayDataHolder, $expectedNoArray, 'Should ignore any no array values'),
-            array($arrayDataHolder, $expectedArray, 'Should normalize array values'),
-            array($arrayWithScalarsDataHolder, $expectedArrayWithScalars, 'Should do nothing with simple scalar types'),
-            array($arrayWithObjectDataHolder, $expectedArrayWithObject, 'Should do var export on all objects in the array'),
-            array($arrayWithSubArrayDataHolder, $expectedArrayWithSubArray, 'Should do var export on all sub arrays in the array'),
+        $this->assertEquals(
+            array(
+                'int' => 555,
+                'str' => 'bar',
+                'flt' => 1.11
+            ),
+            $normalizer->normalize($data)
         );
     }
 
     /**
-     *
+     * @test
+     */
+    public function shouldLeaveEmptySubArrayAsIs()
+    {
+        $data = new DataHolder();
+        $data->set('subArray', array());
+
+        $normalizer = new DataHolderNormalizer;
+
+        $this->assertEquals(
+            array(
+                'subArray' => array(),
+            ),
+            $normalizer->normalize($data)
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function shouldVarExportObject()
+    {
+        $data = new DataHolder();
+        $data->set('obj', new \stdClass());
+
+        $normalizer = new DataHolderNormalizer;
+
+        $this->assertEquals(
+            array(
+                'obj' => var_export(new \stdClass(), true),
+            ),
+            $normalizer->normalize($data)
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function shouldLeaveScalarInSubArrayAsIs()
+    {
+        $data = new DataHolder();
+        $data->set('subArray', array(
+            'int' => 555,
+            'str' => 'bar',
+            'flt' => 1.11
+        ));
+
+        $normalizer = new DataHolderNormalizer;
+
+        $this->assertEquals(
+            array(
+                'subArray' => array(
+                    'int' => 555,
+                    'str' => 'bar',
+                    'flt' => 1.11
+                ),
+            ),
+            $normalizer->normalize($data)
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function shouldVarExporyArraysInSubArrays()
+    {
+        $data = new DataHolder();
+        $data->set('subArray', array(
+            'subSubArray' => array('foo' => 'foo'),
+        ));
+
+        $normalizer = new DataHolderNormalizer;
+
+        $this->assertEquals(
+            array(
+                'subArray' => array(
+                    'subSubArray' => var_export(array('foo' => 'foo'), true),
+                ),
+            ),
+            $normalizer->normalize($data)
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function shouldVarExporyObjectsInSubArrays()
+    {
+        $data = new DataHolder();
+        $data->set('subArray', array(
+            'obj' => new \stdClass(),
+        ));
+
+        $normalizer = new DataHolderNormalizer;
+
+        $this->assertEquals(
+            array(
+                'subArray' => array(
+                    'obj' => var_export(new \stdClass(), true),
+                ),
+            ),
+            $normalizer->normalize($data)
+        );
+    }
+
+    /**
      * @test
      */
     public function shouldBeSubclassOfAbstractProvider()
@@ -92,6 +194,20 @@ class DataHolderNormalizerTest extends \PHPUnit_Framework_TestCase
         $normalizer = new DataHolderNormalizer;
 
         $this->assertTrue($normalizer->supportsNormalization($data), $failMessage);
+    }
+
+    /**
+     * @test
+     *
+     * @dataProvider provideNotSupportedNormalizations
+     *
+     * @expectedException Symfony\Component\Serializer\Exception\UnsupportedException
+     */
+    public function throwIfTryToNormalizeNotSupportedData($notSupportedData)
+    {
+        $normalizer = new DataHolderNormalizer;
+
+        $normalizer->normalize($notSupportedData);
     }
 
     /**
@@ -127,26 +243,12 @@ class DataHolderNormalizerTest extends \PHPUnit_Framework_TestCase
      * @dataProvider provideNotSupportedDenormalizations
      *
      * @expectedException Symfony\Component\Serializer\Exception\UnsupportedException
-     * @expectedExceptionMessage Denormalization is not supported by this normalizer
+     * @expectedExceptionMessage Denormalization of any formats is not supported.
      */
-    public function shouldThrowOnDenormalizeCall($data, $type)
+    public function throwAlwaysOnDenormalizeCall($data, $type)
     {
         $normalizer = new DataHolderNormalizer;
 
         $normalizer->denormalize($data, $type);
-    }
-
-    /**
-     * @test
-     *
-     * @dataProvider provideNormalizationData
-     */
-    public function shouldNormalizeDataHolderIntoArray($data, $expectedNormalizedData, $failMessage)
-    {
-        $normalizer = new DataHolderNormalizer;
-
-        $actualNormalizedData = $normalizer->normalize($data);
-
-        $this->assertEquals($expectedNormalizedData, $actualNormalizedData, $failMessage);
     }
 }
