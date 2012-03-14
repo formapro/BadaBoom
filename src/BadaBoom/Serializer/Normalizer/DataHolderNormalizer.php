@@ -31,7 +31,7 @@ class DataHolderNormalizer implements NormalizerInterface
             } else if (is_scalar($value)){
                 $result[$key] = $this->normalizeScalar($value);
             } else {
-                $result[$key] = var_export($value);
+                $result[$key] = var_export($value, true);
             }
         }
 

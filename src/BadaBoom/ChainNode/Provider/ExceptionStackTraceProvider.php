@@ -11,7 +11,6 @@ class ExceptionStackTraceProvider extends AbstractProvider
     protected $sectionName;
 
     /**
-     *
      * @param string $sectionName
      */
     public function __construct($sectionName = 'stacktrace')
@@ -19,6 +18,9 @@ class ExceptionStackTraceProvider extends AbstractProvider
         $this->sectionName = $sectionName;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function handle(\Exception $exception, DataHolderInterface $data)
     {
         $data->set($this->sectionName, (string) $exception);
