@@ -49,46 +49,6 @@ class SafeChainNodeDecoratorTest extends \PHPUnit_Framework_TestCase
     /**
      * @test
      */
-    public function shouldProxyPushToChainNodeSetInConstructor()
-    {
-        $expectedPushedChainNode = $this->createChainNode();
-
-        $chainNodeMock = $this->createChainNode();
-        $chainNodeMock
-            ->expects($this->once())
-            ->method('push')
-            ->with(
-                $this->equalTo($expectedPushedChainNode)
-            )
-        ;
-
-        $safe = new SafeChainNodeDecorator($chainNodeMock);
-
-        $safe->push($expectedPushedChainNode);
-    }
-
-    /**
-     * @test
-     */
-    public function shouldReturnResultOfInternalChainNodeWhilePushing()
-    {
-        $expectedPushedChainNode = $this->createChainNode();
-
-        $chainNodeMock = $this->createChainNode();
-        $chainNodeMock
-                ->expects($this->any())
-                ->method('push')
-                ->will($this->returnValue($expectedPushedChainNode))
-        ;
-
-        $safe = new SafeChainNodeDecorator($chainNodeMock);
-
-        $this->assertSame($expectedPushedChainNode, $safe->push($expectedPushedChainNode));
-    }
-
-    /**
-     * @test
-     */
     public function shouldProxyNextNodeToChainNodeSetInConstructor()
     {
         $expectedNextChainNode = $this->createChainNode();

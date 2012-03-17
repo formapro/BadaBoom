@@ -50,12 +50,4 @@ class SafeChainNodeDecorator implements ChainNodeInterface
     {
         return $this->chainNode->nextNode($node);
     }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function push(ChainNodeInterface $pushedNode)
-    {
-        return $this->chainNode->push($pushedNode);
-    }
 }
