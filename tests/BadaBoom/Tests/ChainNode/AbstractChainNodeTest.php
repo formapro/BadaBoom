@@ -7,7 +7,6 @@ use BadaBoom\DataHolder\DataHolder;
 class AbstractChainNodeTest extends \PHPUnit_Framework_TestCase
 {
     /**
-     *
      * @test
      */
     public function shouldNotBeInstantiable()
@@ -17,7 +16,6 @@ class AbstractChainNodeTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     *
      * @test
      */
     public function shouldImplementChainNodeInterface()
@@ -27,7 +25,6 @@ class AbstractChainNodeTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     *
      * @test
      */
     public function shouldAllowToSetNextNode()
@@ -39,7 +36,6 @@ class AbstractChainNodeTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     *
      * @test
      */
     public function shouldReturnNextNodeAfterChaining()
@@ -51,7 +47,6 @@ class AbstractChainNodeTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     *
      * @test
      */
     public function shouldDelegateHandlingToNextChainNode()
@@ -141,12 +136,27 @@ class AbstractChainNodeTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     *
      * @test
      */
     public function shouldNotDelegateHandlingIfNextChainNodeIsUndefined()
     {
         $this->createMockChainNode()->handleNextNode(new \Exception, new DataHolder);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldNotDelegateHandlingIfNextChainNodeIsNulled()
+    {
+        $chainNode = $this->createMockChainNode();
+        $nextChainNode = $this->createMockChainNode();
+
+        $chainNode->nextNode($nextChainNode);
+        $chainNode->nextNode(null);
+
+        $nextChainNode->expects($this->never())->method('handle');
+
+        $chainNode->handleNextNode(new \Exception(), new DataHolder());
     }
 
     /**

@@ -29,7 +29,7 @@ abstract class AbstractChainNode implements ChainNodeInterface
      *
      * {@inheritdoc}
      */
-    public function nextNode(ChainNodeInterface $node)
+    public function nextNode(ChainNodeInterface $node = null)
     {
         return $this->nextNode = $node;
     }
