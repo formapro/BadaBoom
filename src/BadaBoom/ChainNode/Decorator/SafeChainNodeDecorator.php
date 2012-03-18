@@ -46,7 +46,7 @@ class SafeChainNodeDecorator implements ChainNodeInterface
     /**
      * {@inheritdoc}
      */
-    public function nextNode(ChainNodeInterface $node)
+    public function nextNode(ChainNodeInterface $node = null)
     {
         return $this->chainNode->nextNode($node);
     }
