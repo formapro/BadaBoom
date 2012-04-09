@@ -82,9 +82,7 @@ class CallbackChainNodeTest extends \PHPUnit_Framework_TestCase
 
         $nextNode = $this->createChainNodeMock();
 
-        $node = new CallbackChainNode(function() {
-            return true;
-        });
+        $node = new CallbackChainNode(function() {}, $handleNextNode = true);
         $node->nextNode($nextNode);
 
         $nextNode
