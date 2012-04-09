@@ -105,11 +105,7 @@ class CallbackChainNodeTest extends \PHPUnit_Framework_TestCase
             ->method('handle')
         ;
 
-        $node = new CallbackChainNode(function() {
-                return false;
-            },
-            $handleNextNode = false
-        );
+        $node = new CallbackChainNode(function() {}, $handleNextNode = false);
 
         $node->nextNode($nextNode);
 
