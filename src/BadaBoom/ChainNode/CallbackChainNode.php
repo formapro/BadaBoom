@@ -10,30 +10,39 @@ use BadaBoom\DataHolder\DataHolderInterface;
  */
 class CallbackChainNode extends AbstractChainNode
 {
-  /**
-   * @var Callable|Closure
-   */
-  protected  $callback;
+    /**
+     * @var Callable|Closure
+     */
+    protected $callback;
 
-  /**
-   * @param Callable|Closure $callback
-   */
-  public function __construct($callback)
-  {
-    if (false == is_callable($callback)) {
-      throw new \InvalidArgumentException('Invalid callable provided');
+    /**
+     * @var boolean
+     */
+    protected $handleNextNode;
+
+    /**
+     * @param Callable|Closure $callback
+     * @param boolean $handleNextNode
+     */
+    public function __construct($callback, $handleNextNode = true)
+    {
+        if (false == is_callable($callback)) {
+            throw new \InvalidArgumentException('Invalid callable provided');
+        }
+
+        $this->callback = $callback;
+        $this->handleNextNode = $handleNextNode;
     }
 
-    $this->callback = $callback;
-  }
+    /**
+     * {@inheritdoc}
+     */
+    public function handle(\Exception $exception, DataHolderInterface $data)
+    {
+        call_user_func_array($this->callback, array($exception, $data));
 
-  /**
-   * {@inheritdoc}
-   */
-  public function handle(\Exception $exception, DataHolderInterface $data)
-  {
-    if (true === call_user_func_array($this->callback, array($exception, $data))) {
-      $this->handleNextNode($exception, $data);
+        if ($this->handleNextNode) {
+            $this->handleNextNode($exception, $data);
+        }
     }
-  }
 }

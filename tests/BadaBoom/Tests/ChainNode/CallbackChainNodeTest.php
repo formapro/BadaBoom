@@ -11,141 +11,156 @@ use BadaBoom\DataHolder\DataHolder;
  */
 class CallbackChainNodeTest extends \PHPUnit_Framework_TestCase
 {
-  /**
-   * @test
-   */
-  public function shouldBeSubclassOfAbstractChainNode()
-  {
-    $rc = new \ReflectionClass('BadaBoom\ChainNode\CallbackChainNode');
-    $this->assertTrue($rc->isSubclassOf('BadaBoom\ChainNode\AbstractChainNode'));
-  }
+    /**
+     * @test
+     */
+    public function shouldBeSubclassOfAbstractChainNode()
+    {
+        $rc = new \ReflectionClass('BadaBoom\ChainNode\CallbackChainNode');
+        $this->assertTrue($rc->isSubclassOf('BadaBoom\ChainNode\AbstractChainNode'));
+    }
 
-  /**
-   * @test
-   *
-   * @dataProvider provideValidCallbacks
-   */
-  public function shouldBeConstructedWithCallback($callback)
-  {
-    new CallbackChainNode($callback);
-  }
+    /**
+     * @test
+     *
+     * @dataProvider provideValidCallbacks
+     */
+    public function shouldBeConstructedWithCallback($callback)
+    {
+        new CallbackChainNode($callback);
+    }
 
-  /**
-   * @test
-   *
-   * @dataProvider provideNoCallableItems
-   *
-   * @expectedException \InvalidArgumentException
-   * @expectedExceptionMessage Invalid callable provided
-   */
-  public function throwWhenConstructedWithInvalidCallback($invalidCallback)
-  {
-    new CallbackChainNode($invalidCallback);
-  }
+    /**
+     * @test
+     */
+    public function couldBeConstructedWithFlagForProcessingNextNode()
+    {
+        new CallbackChainNode(function(){}, $handleNextNode = false);
 
-  /**
-   * @test
-   */
-  public function shouldDelegateHandlingToCallback()
-  {
-    $is_called = false;
-    $exception = new \Exception();
-    $data = new DataHolder();
+        new CallbackChainNode(function(){}, $handleNextNode = true);
+    }
 
-    $test = $this;
+    /**
+     * @test
+     *
+     * @dataProvider provideNoCallableItems
+     *
+     * @expectedException \InvalidArgumentException
+     * @expectedExceptionMessage Invalid callable provided
+     */
+    public function throwWhenConstructedWithInvalidCallback($invalidCallback)
+    {
+        new CallbackChainNode($invalidCallback);
+    }
 
-    $node = new CallbackChainNode(function($e, $d) use ($exception, $data, $test, &$is_called) {
-      $test->assertSame($exception, $e);
-      $test->assertSame($data, $d);
-      $is_called = true;
-    });
+    /**
+     * @test
+     */
+    public function shouldDelegateHandlingToCallback()
+    {
+        $exception = new \Exception();
+        $data = new DataHolder();
 
-    $node->handle($exception, $data);
+        $callback = $this->getMock('BadaBoom\ChainNode\ChainNodeInterface');
+        $callback
+            ->expects($this->once())
+            ->method('handle')
+            ->with($exception, $data)
+         ;
 
-    $this->assertTrue($is_called);
-  }
+        $callbackNode = new CallbackChainNode(array($callback, 'handle'));
+        $callbackNode->handle($exception, $data);
+    }
 
-  /**
-   * @test
-   */
-  public function shouldGiveControlToNextNodeIfCallbackReturnTrue()
-  {
-    $exception = new \Exception();
-    $data = new DataHolder();
+    /**
+     * @test
+     */
+    public function shouldGiveControlToNextNode()
+    {
+        $exception = new \Exception();
+        $data = new DataHolder();
 
-    $nextNode = $this->createChainNodeMock();
+        $nextNode = $this->createChainNodeMock();
 
-    $node = new CallbackChainNode(function() {
-      return true;
-    });
-    $node->nextNode($nextNode);
+        $node = new CallbackChainNode(function() {
+            return true;
+        });
+        $node->nextNode($nextNode);
 
-    $nextNode->expects($this->once())
-      ->method('handle')
-      ->with($exception, $data)
-    ;
+        $nextNode
+            ->expects($this->once())
+            ->method('handle')
+            ->with($exception, $data)
+        ;
 
-    $node->handle($exception, $data);
-  }
+        $node->handle($exception, $data);
+    }
 
-  /**
-   * @test
-   */
-  public function shouldNotGiveControlToNextNodeIfCallbackReturnFalse()
-  {
-    $nextNode = $this->createChainNodeMock();
+    /**
+     * @test
+     */
+    public function shouldNotGiveControlToNextNode()
+    {
+        $nextNode = $this->createChainNodeMock();
+        $nextNode
+            ->expects($this->never())
+            ->method('handle')
+        ;
 
-    $node = new CallbackChainNode(function() {
-      return false;
-    });
-    $node->nextNode($nextNode);
+        $node = new CallbackChainNode(function() {
+                return false;
+            },
+            $handleNextNode = false
+        );
 
-    $node->handle(new \Exception(), new DataHolder());
-  }
+        $node->nextNode($nextNode);
 
-  /**
-   * @return \PHPUnit_Framework_MockObject_MockObject
-   */
-  public function createChainNodeMock()
-  {
-    return $this->getMock('BadaBoom\ChainNode\ChainNodeInterface');
-  }
+        $node->handle(new \Exception(), new DataHolder());
+    }
 
-  /**
-   * @return array
-   */
-  public static function provideValidCallbacks()
-  {
-    $staticMethod = array(__NAMESPACE__.'\StubMethodCall', 'staticMethod');
-    $objectMethod = array(new StubMethodCall(), 'objectMethod');
-    $closure = function() {};
-    $function = 'is_callable';
+    /**
+     * @return \PHPUnit_Framework_MockObject_MockObject
+     */
+    public function createChainNodeMock()
+    {
+        return $this->getMock('BadaBoom\ChainNode\ChainNodeInterface');
+    }
 
-    return array(
-      array($staticMethod),
-      array($objectMethod),
-      array($closure),
-      array($function),
-    );
-  }
+    /**
+     * @return array
+     */
+    public static function provideValidCallbacks()
+    {
+        $staticMethod = array(__NAMESPACE__ . '\StubMethodCall', 'staticMethod');
+        $objectMethod = array(new StubMethodCall(), 'objectMethod');
+        $closure = function(){};
+        $function = 'is_callable';
 
-  /**
-   * @return array
-   */
-  public static function provideNoCallableItems()
-  {
-    return array(
-      array('string'),
-      array(1),
-      array(12.2),
-      array(array()),
-      array(false),
-      array(null),
-      array(new \stdClass()),
-      array(array(new \stdClass(), 'no_exist_method')),
-      array(array('stdClass', 'no_exist_method')),
-    );
-  }
+        return array(
+            array($staticMethod),
+            array($objectMethod),
+            array($closure),
+            array($function),
+        );
+    }
+
+    /**
+     * @return array
+     */
+    public static function provideNoCallableItems()
+    {
+        return array(
+            array('string'),
+            array(1),
+            array(12.2),
+            array(array()),
+            array(false),
+            array(null),
+            array(new \stdClass()),
+            array(array(new \stdClass(), 'no_exist_method')),
+            array(array('stdClass', 'no_exist_method')),
+        );
+    }
 }
 
 /**
@@ -153,7 +168,7 @@ class CallbackChainNodeTest extends \PHPUnit_Framework_TestCase
  */
 class StubMethodCall
 {
-  public static function staticMethod() {}
+    public static function staticMethod(){}
 
-  public function objectMethod() {}
+    public function objectMethod(){}
 }
