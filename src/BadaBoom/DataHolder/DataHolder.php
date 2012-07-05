@@ -14,7 +14,12 @@ class DataHolder implements DataHolderInterface
      *
      * @var array
      */
-    protected $data = array();
+    protected $data;
+
+    public function __construct(array $data = array())
+    {
+        $this->data = $data;
+    }
 
     /**
      *
