@@ -4,13 +4,9 @@ php:
   - 5.3
   - 5.4
 
-env:
-  - composer_params=""
-  - composer_params=" --install-suggests"
-
 before_script:
   - wget http://getcomposer.org/composer.phar
-  - php composer.phar install $composer_params
+  - php composer.phar install --env=dev
 
 branches:
   only:
