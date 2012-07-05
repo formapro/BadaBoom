@@ -20,7 +20,7 @@
         "symfony/serializer": ">=2.0.6",
         "fp/fumocker": ">=0.9.0"
     },
-    "suggest": {
+    "require-dev": {
         "swiftmailer/swiftmailer": ">=4.1.0"
     },
     "autoload": {
