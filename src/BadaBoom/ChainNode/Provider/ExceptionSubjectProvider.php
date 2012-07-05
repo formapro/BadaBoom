@@ -14,7 +14,12 @@ class ExceptionSubjectProvider extends AbstractProvider
     {
         $rc = new \ReflectionClass($exception);
 
-        $data->set('subject', sprintf('%s: %s', $rc->getShortName(), $exception->getMessage()));
+        $message = $exception->getMessage();
+        if (strlen($message) > 76) {
+            $message = substr($message, 0, 76) .' ...';
+        }
+
+        $data->set('subject', sprintf('%s: %s', $rc->getShortName(), $message));
 
         return $this->handleNextNode($exception, $data);
     }
