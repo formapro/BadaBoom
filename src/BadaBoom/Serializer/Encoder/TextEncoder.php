@@ -59,6 +59,6 @@ class TextEncoder implements EncoderInterface
      */
     public function supportsEncoding($format)
     {
-        return 'plain-text' === $format;
+        return 'text' === $format;
     }
 }
