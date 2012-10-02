@@ -27,5 +27,7 @@ class NewrelicSender extends AbstractChainNode
     public function handle(\Exception $exception, DataHolderInterface $data)
     {
         newrelic_notice_error($exception->getMessage(), $exception);
+        
+        $this->handleNextNode($exception, $data);
     }
 }
