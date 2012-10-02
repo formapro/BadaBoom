@@ -10,10 +10,14 @@ use BadaBoom\DataHolder\DataHolderInterface;
  */
 class NewrelicSender extends AbstractChainNode 
 {
-    public function __construct()
+    public function __construct($applicationName = null)
     {
         if (false == extension_loaded('newrelic')) {
             throw new \RuntimeException('The newrelic php extension is not installed. The instruction could be found at https://newrelic.com/docs/php/quick-installation-instructions-advanced-users');
+        }
+        
+        if (function_exists('newrelic_set_appname') && $applicationName) { 
+            newrelic_set_appname($applicationName);
         }
     }
     
