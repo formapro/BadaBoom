@@ -23,6 +23,9 @@
         "swiftmailer/swiftmailer": ">=4.1.0",
         "fp/fumocker": ">=1.0-dev"
     },
+    "suggest": {
+        "ext-newrelic": "In case you want use newrelic.com service."
+    },
     "autoload": {
         "psr-0": {
           "BadaBoom": "src/"
