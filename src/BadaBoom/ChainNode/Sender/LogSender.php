@@ -43,5 +43,7 @@ class LogSender extends AbstractSender
             $content,
             $data->get('log_level', $this->configuration->get('log_level', self::INFO))
         );
+        
+        $this->handleNextNode($exception, $data);
     }
 }
