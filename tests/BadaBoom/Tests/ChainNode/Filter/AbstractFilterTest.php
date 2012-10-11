@@ -1,7 +1,7 @@
 <?php
 namespace BadaBoom\Tests\ChainNode\Filter;
 
-use BadaBoom\DataHolder\DataHolder;
+use BadaBoom\Context;
 
 class AbstractFilterTest extends \PHPUnit_Framework_TestCase
 {
@@ -28,9 +28,9 @@ class AbstractFilterTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldDecideWhetherExecutionShouldContinueOrNot()
     {
-        $filter = $this->createMockFilter();
+        $filter = $this->createAbstractFilterMock();
 
-        $filter->shouldContinue(new \Exception, new DataHolder);
+        $filter->shouldContinue(new Context(new \Exception));
     }
 
     /**
@@ -38,28 +38,24 @@ class AbstractFilterTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldContinuePropagationPassExceptionAndDataToNextNodeIfShouldContinueReturnTrue()
     {
-        $exception = new \Exception('foo');
-        $data = new DataHolder();
+        $context = new Context(new \Exception);
 
-        $nextNode = $this->createMockChainNode();
+        $nextNode = $this->createChainNodeMock();
         $nextNode
             ->expects($this->once())
             ->method('handle')
-            ->with(
-                $this->equalTo($exception),
-                $this->equalTo($data)
-            )
+            ->with($context)
         ;
 
-        $filter = $this->createMockFilter();
+        $filter = $this->createAbstractFilterMock();
         $filter
-                ->expects($this->atLeastOnce())
-                ->method('shouldContinue')
-                ->will($this->returnValue(true))
+            ->expects($this->atLeastOnce())
+            ->method('shouldContinue')
+            ->will($this->returnValue(true))
         ;
         $filter->nextNode($nextNode);
 
-        $filter->handle($exception, $data);
+        $filter->handle($context);
     }
 
     /**
@@ -67,16 +63,15 @@ class AbstractFilterTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldNotContinuePropagationIfShouldContinueReturnFalse()
     {
-        $exception = new \Exception('foo');
-        $data = new DataHolder();
+        $context = new Context(new \Exception);
 
-        $nextNode = $this->createMockChainNode();
+        $nextNode = $this->createChainNodeMock();
         $nextNode
                 ->expects($this->never())
                 ->method('handle')
         ;
 
-        $filter = $this->createMockFilter();
+        $filter = $this->createAbstractFilterMock();
         $filter
                 ->expects($this->atLeastOnce())
                 ->method('shouldContinue')
@@ -84,15 +79,15 @@ class AbstractFilterTest extends \PHPUnit_Framework_TestCase
         ;
         $filter->nextNode($nextNode);
 
-        $filter->handle($exception, $data);
+        $filter->handle($context);
     }
 
-    protected function createMockFilter()
+    protected function createAbstractFilterMock()
     {
         return $this->getMockForAbstractClass('BadaBoom\ChainNode\Filter\AbstractFilter');
     }
 
-    protected function createMockChainNode()
+    protected function createChainNodeMock()
     {
         return $this->getMockForAbstractClass('BadaBoom\ChainNode\AbstractChainNode');
     }

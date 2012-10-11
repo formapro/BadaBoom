@@ -1,7 +1,7 @@
 <?php
 namespace BadaBoom\ChainNode\Filter;
 
-use BadaBoom\DataHolder\DataHolderInterface;
+use BadaBoom\Context;
 
 class ExceptionClassFilter extends AbstractFilter
 {
@@ -58,8 +58,10 @@ class ExceptionClassFilter extends AbstractFilter
     /**
      * {@inheritdoc}
      */
-    public function shouldContinue(\Exception $exception, DataHolderInterface $data)
+    public function shouldContinue(Context $context)
     {
+        $exception = $context->getException();
+        
         $caughtExceptionClass = get_class($exception);
         while ($caughtExceptionClass) {
             foreach ($this->rules as $exceptionClass => $rule) {

@@ -1,9 +1,8 @@
 <?php
 namespace BadaBoom\Tests\ChainNode\Filter;
 
-use BadaBoom\Adapter\Cache\ArrayCacheAdapter;
 use BadaBoom\ChainNode\Filter\DuplicateExceptionFilter;
-use BadaBoom\DataHolder\DataHolder;
+use BadaBoom\Context;
 
 class DuplicateExceptionFilterTest extends \PHPUnit_Framework_TestCase
 {
@@ -21,7 +20,7 @@ class DuplicateExceptionFilterTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldRequireCacheAdapterAndLifeTimeProvidedInConstructor()
     {
-        new DuplicateExceptionFilter($this->createCacheAdapter(), $lifetime = 2000);
+        new DuplicateExceptionFilter($this->createCacheAdapterMock(), $lifetime = 2000);
     }
 
     /**
@@ -29,7 +28,7 @@ class DuplicateExceptionFilterTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldGenerateCacheIdForException()
     {
-        $filter = new DuplicateExceptionFilter($this->createCacheAdapter(), $lifetime = 2000);
+        $filter = new DuplicateExceptionFilter($this->createCacheAdapterMock(), $lifetime = 2000);
 
         $id = $filter->generateCacheId(new \Exception('foo'));
 
@@ -43,7 +42,7 @@ class DuplicateExceptionFilterTest extends \PHPUnit_Framework_TestCase
     public function shouldGenerateSameCacheIdAsExpected()
     {
         $exception = new \Exception('foo');
-        $filter = new DuplicateExceptionFilter($this->createCacheAdapter(), $lifetime = 2000);
+        $filter = new DuplicateExceptionFilter($this->createCacheAdapterMock(), $lifetime = 2000);
 
         $expectedCacheId = md5(get_class($exception) . $exception->getFile() . $exception->getLine());
         $actualCacheId = $filter->generateCacheId($exception);
@@ -57,8 +56,9 @@ class DuplicateExceptionFilterTest extends \PHPUnit_Framework_TestCase
     public function shouldDenyPropagationIfExceptionAlreadyInCache()
     {
         $exception = new \Exception('foo');
+        $context = new Context($exception);
 
-        $cache = $this->createCacheAdapter();
+        $cache = $this->createCacheAdapterMock();
         $filter = new DuplicateExceptionFilter($cache, $lifetime = 2000);
 
         $cacheId = $filter->generateCacheId($exception);
@@ -69,7 +69,7 @@ class DuplicateExceptionFilterTest extends \PHPUnit_Framework_TestCase
             ->will($this->returnValue(true))
         ;
 
-        $this->assertFalse($filter->shouldContinue($exception, new DataHolder));
+        $this->assertFalse($filter->shouldContinue($context));
     }
 
     /**
@@ -78,7 +78,9 @@ class DuplicateExceptionFilterTest extends \PHPUnit_Framework_TestCase
     public function shouldAllowPropagationIfExceptionNotInCache()
     {
         $exception = new \Exception('foo');
-        $cache = $this->createCacheAdapter();
+        $context = new Context($exception);
+        
+        $cache = $this->createCacheAdapterMock();
         $filter = new DuplicateExceptionFilter($cache, $lifetime = 2000);
 
         $cacheId = $filter->generateCacheId($exception);
@@ -89,7 +91,7 @@ class DuplicateExceptionFilterTest extends \PHPUnit_Framework_TestCase
             ->will($this->returnValue(false))
         ;
 
-        $this->assertTrue($filter->shouldContinue($exception, new DataHolder));
+        $this->assertTrue($filter->shouldContinue($context));
     }
 
     /**
@@ -100,7 +102,9 @@ class DuplicateExceptionFilterTest extends \PHPUnit_Framework_TestCase
         $expectedLifeTime = 2000;
 
         $exception = new \Exception('foo');
-        $cache = $this->createCacheAdapter();
+        $context = new Context($exception);
+        
+        $cache = $this->createCacheAdapterMock();
 
         $filter = new DuplicateExceptionFilter($cache, $expectedLifeTime);
 
@@ -122,10 +126,10 @@ class DuplicateExceptionFilterTest extends \PHPUnit_Framework_TestCase
             ->will($this->returnValue(false))
         ;
 
-        $filter->shouldContinue($exception, new DataHolder);
+        $filter->shouldContinue($context);
     }
 
-    protected function createCacheAdapter()
+    protected function createCacheAdapterMock()
     {
         return $this->getMock('BadaBoom\Adapter\Cache\CacheAdapterInterface');
     }

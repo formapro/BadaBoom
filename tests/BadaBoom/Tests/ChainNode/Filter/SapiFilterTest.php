@@ -1,10 +1,8 @@
 <?php
 namespace BadaBoom\Tests\ChainNode\Filter;
 
-use BadaBoom\DataHolder\DataHolder;
 use BadaBoom\ChainNode\Filter\SapiFilter;
-
-use Fumocker\Fumocker;
+use BadaBoom\Context;
 
 class SapiFilterTest extends \PHPUnit_Framework_TestCase
 {
@@ -15,7 +13,11 @@ class SapiFilterTest extends \PHPUnit_Framework_TestCase
 
     public function setUp()
     {
-        $this->fumocker = new Fumocker;
+        if (false == class_exists('Fumocker\Fumocker')) {
+            $this->markTestSkipped('These test requires Fumocker lib.');
+        }
+        
+        $this->fumocker = new \Fumocker\Fumocker();
     }
 
     /**
@@ -42,7 +44,7 @@ class SapiFilterTest extends \PHPUnit_Framework_TestCase
     {
         $filter = new SapiFilter();
 
-        $this->assertTrue($filter->shouldContinue(new \Exception(), new DataHolder()));
+        $this->assertTrue($filter->shouldContinue(new Context(new \Exception)));
     }
 
     /**
@@ -64,7 +66,7 @@ class SapiFilterTest extends \PHPUnit_Framework_TestCase
 
         $filter->denyAll();
 
-        $this->assertFalse($filter->shouldContinue(new \Exception(), new DataHolder()));
+        $this->assertFalse($filter->shouldContinue(new Context(new \Exception)));
     }
 
     /**
@@ -86,7 +88,7 @@ class SapiFilterTest extends \PHPUnit_Framework_TestCase
 
         $filter->allowAll();
 
-        $this->assertTrue($filter->shouldContinue(new \Exception(), new DataHolder()));
+        $this->assertTrue($filter->shouldContinue(new Context(new \Exception)));
     }
 
     /**
@@ -97,13 +99,13 @@ class SapiFilterTest extends \PHPUnit_Framework_TestCase
         $filter = new SapiFilter();
 
         $filter->allowAll();
-        $this->assertTrue($filter->shouldContinue(new \Exception(), new DataHolder()));
+        $this->assertTrue($filter->shouldContinue(new Context(new \Exception)));
 
         $filter->denyAll();
-        $this->assertFalse($filter->shouldContinue(new \Exception(), new DataHolder()));
+        $this->assertFalse($filter->shouldContinue(new Context(new \Exception)));
 
         $filter->allowAll();
-        $this->assertTrue($filter->shouldContinue(new \Exception(), new DataHolder()));
+        $this->assertTrue($filter->shouldContinue(new Context(new \Exception)));
     }
 
     /**
@@ -147,7 +149,7 @@ class SapiFilterTest extends \PHPUnit_Framework_TestCase
 
         $filter->deny($deniedSapiName);
 
-        $this->assertFalse($filter->shouldContinue(new \Exception(), new DataHolder));
+        $this->assertFalse($filter->shouldContinue(new Context(new \Exception)));
     }
 
     /**
@@ -159,9 +161,9 @@ class SapiFilterTest extends \PHPUnit_Framework_TestCase
 
         $phpSapiNameFunctionMock = $this->fumocker->getMock('BadaBoom\ChainNode\Filter', 'php_sapi_name');
         $phpSapiNameFunctionMock
-                ->expects($this->once())
-                ->method('php_sapi_name')
-                ->will($this->returnValue($allowedSapiName))
+            ->expects($this->once())
+            ->method('php_sapi_name')
+            ->will($this->returnValue($allowedSapiName))
         ;
 
         $filter = new SapiFilter();
@@ -171,7 +173,7 @@ class SapiFilterTest extends \PHPUnit_Framework_TestCase
 
         $filter->allow($allowedSapiName);
 
-        $this->assertTrue($filter->shouldContinue(new \Exception(), new DataHolder));
+        $this->assertTrue($filter->shouldContinue(new Context(new \Exception)));
     }
 
     /**
@@ -179,9 +181,6 @@ class SapiFilterTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldOverwriteDeniedRuleByAllowed()
     {
-        $exception = new \Exception();
-        $data = new DataHolder;
-
         $sapiName = 'sapi_name';
 
         $phpSapiNameFunctionMock = $this->fumocker->getMock('BadaBoom\ChainNode\Filter', 'php_sapi_name');
@@ -199,7 +198,7 @@ class SapiFilterTest extends \PHPUnit_Framework_TestCase
         $filter->deny($sapiName);
         $filter->allow($sapiName);
 
-        $this->assertTrue($filter->shouldContinue($exception, $data));
+        $this->assertTrue($filter->shouldContinue(new Context(new \Exception)));
     }
 
     /**
@@ -207,9 +206,6 @@ class SapiFilterTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldOverwriteAllowedRuleByDenied()
     {
-        $exception = new \Exception();
-        $data = new DataHolder;
-
         $sapiName = 'sapi_name';
 
         $phpSapiNameFunctionMock = $this->fumocker->getMock('BadaBoom\ChainNode\Filter', 'php_sapi_name');
@@ -227,6 +223,6 @@ class SapiFilterTest extends \PHPUnit_Framework_TestCase
         $filter->allow($sapiName);
         $filter->deny($sapiName);
 
-        $this->assertFalse($filter->shouldContinue($exception, $data));
+        $this->assertFalse($filter->shouldContinue(new Context(new \Exception)));
     }
 }

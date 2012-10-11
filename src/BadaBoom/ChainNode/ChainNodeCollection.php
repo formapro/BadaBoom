@@ -1,8 +1,7 @@
 <?php
-
 namespace BadaBoom\ChainNode;
 
-use BadaBoom\DataHolder\DataHolderInterface;
+use BadaBoom\Context;
 
 class ChainNodeCollection implements ChainNodeCollectionInterface
 {
@@ -35,10 +34,10 @@ class ChainNodeCollection implements ChainNodeCollectionInterface
     /**
      * {@inheritdoc}
      */
-    public function handle(\Exception $exception, DataHolderInterface $data)
+    public function handle(Context $context)
     {
         if ($chain = $this->buildChain()) {
-            $chain->handle($exception, $data);
+            $chain->handle($context);
         }
     }
 

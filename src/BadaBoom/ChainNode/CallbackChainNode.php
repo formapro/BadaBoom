@@ -2,7 +2,7 @@
 
 namespace BadaBoom\ChainNode;
 
-use BadaBoom\DataHolder\DataHolderInterface;
+use BadaBoom\Context;
 
 /**
  * @author Vadim Tyukov <brainreflex@gmail.com>
@@ -37,12 +37,12 @@ class CallbackChainNode extends AbstractChainNode
     /**
      * {@inheritdoc}
      */
-    public function handle(\Exception $exception, DataHolderInterface $data)
+    public function handle(Context $context)
     {
-        call_user_func_array($this->callback, array($exception, $data));
+        call_user_func_array($this->callback, array($context));
 
         if ($this->handleNextNode) {
-            $this->handleNextNode($exception, $data);
+            $this->handleNextNode($context);
         }
     }
 }

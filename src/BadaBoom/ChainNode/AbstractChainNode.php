@@ -1,8 +1,7 @@
 <?php
-
 namespace BadaBoom\ChainNode;
 
-use BadaBoom\DataHolder\DataHolderInterface;
+use BadaBoom\Context;
 
 abstract class AbstractChainNode implements ChainNodeInterface
 {
@@ -13,37 +12,22 @@ abstract class AbstractChainNode implements ChainNodeInterface
     protected $nextNode;
 
     /**
-     *
-     * @param DataHolderInterface $data
+     * @param Context $context
      *
      * @return void
      */
-    public function handleNextNode(\Exception $exception, DataHolderInterface $data)
+    public function handleNextNode(Context $context)
     {
         if ($this->nextNode) {
-            $this->nextNode->handle($exception, $data);
+            $this->nextNode->handle($context);
         }
     }
 
     /**
-     *
      * {@inheritdoc}
      */
-    public function nextNode(ChainNodeInterface $node = null)
+    public function nextNode(ChainNodeInterface $node)
     {
         return $this->nextNode = $node;
-    }
-
-    /**
-     *
-     * {@inheritdoc}
-     */
-    public function push(ChainNodeInterface $pushedNode)
-    {
-        if ($currentNextNode = $this->nextNode) {
-            $pushedNode->nextNode($currentNextNode);
-        }
-
-        return $this->nextNode($pushedNode);
     }
 }

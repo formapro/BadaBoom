@@ -1,7 +1,7 @@
 <?php
 namespace BadaBoom\ChainNode\Filter;
 
-use BadaBoom\DataHolder\DataHolderInterface;
+use BadaBoom\Context;
 
 /**
  * For more info {@link http://php.net/manual/en/function.php-sapi-name.php}
@@ -53,7 +53,7 @@ class SapiFilter extends AbstractFilter
     /**
      * {@inheritdoc}
      */
-    public function shouldContinue(\Exception $exception, DataHolderInterface $data)
+    public function shouldContinue(Context $context)
     {
         foreach ($this->rules as $sapiName => $rule) {
             if (php_sapi_name() === $sapiName) {

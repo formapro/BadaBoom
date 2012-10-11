@@ -1,13 +1,12 @@
 <?php
-
 namespace BadaBoom\Serializer\Normalizer;
 
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\Serializer\Exception\UnsupportedException;
 
-use BadaBoom\DataHolder\DataHolderInterface;
+use BadaBoom\Context;
 
-class DataHolderNormalizer implements NormalizerInterface
+class ContextNormalizer implements NormalizerInterface
 {
     /**
      * {@inheritdoc}
@@ -87,7 +86,11 @@ class DataHolderNormalizer implements NormalizerInterface
      */
     public function supportsNormalization($data, $format = null)
     {
-        return  $data instanceof DataHolderInterface;
+        if (in_array($format, array('one_line', $strict = true))) {
+            return false;
+        }
+        
+        return  $data instanceof Context;
     }
 
     /**

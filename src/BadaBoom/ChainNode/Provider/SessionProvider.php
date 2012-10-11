@@ -1,7 +1,7 @@
 <?php
 namespace BadaBoom\ChainNode\Provider;
 
-use BadaBoom\DataHolder\DataHolderInterface;
+use BadaBoom\Context;
 
 class SessionProvider extends AbstractProvider
 {
@@ -21,10 +21,13 @@ class SessionProvider extends AbstractProvider
     /**
      * {@inheritdoc}
      */
-    public function handle(\Exception $exception, DataHolderInterface $data)
+    public function handle(Context $context)
     {
-        $data->set($this->sectionName, isset($_SESSION) ? $_SESSION : array());
+        $context->setVar(
+            $this->sectionName, 
+            isset($_SESSION) ? $_SESSION : array()
+        );
 
-        $this->handleNextNode($exception, $data);
+        $this->handleNextNode($context);
     }
 }

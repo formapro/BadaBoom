@@ -1,10 +1,8 @@
 <?php
-
 namespace BadaBoom\Tests\ChainNode;
 
-use BadaBoom\ChainNode\CallbackChainNode;
 use BadaBoom\ChainNode\ChainNodeCollection;
-use BadaBoom\DataHolder\DataHolder;
+use BadaBoom\Context;
 
 class ChainNodeCollectionTest extends \PHPUnit_Framework_TestCase
 {
@@ -65,9 +63,9 @@ class ChainNodeCollectionTest extends \PHPUnit_Framework_TestCase
      * @test
      */
     public function shouldHandleEmptyCollection()
-    {
+    {        
         $collection = new ChainNodeCollection();
-        $collection->handle(new \Exception(), new DataHolder());
+        $collection->handle(new Context(new \Exception));
     }
 
     /**
@@ -84,8 +82,8 @@ class ChainNodeCollectionTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldHandleEmptyCollectionAndDelegateHandlingToNextNode()
     {
-        $exception = new \Exception();
-        $data = new DataHolder();
+        $context = new Context(new \Exception);
+        
         $collection = new ChainNodeCollection();
         $nextNode = $this->createChainNodeMock();
 
@@ -94,10 +92,10 @@ class ChainNodeCollectionTest extends \PHPUnit_Framework_TestCase
         $nextNode
             ->expects($this->once())
             ->method('handle')
-            ->with($exception, $data)
+            ->with($context)
         ;
 
-        $collection->handle($exception, $data);
+        $collection->handle($context);
     }
 
     /**
@@ -113,7 +111,7 @@ class ChainNodeCollectionTest extends \PHPUnit_Framework_TestCase
         $collection->append($firstNode);
         $collection->append($secondNode);
 
-        $collection->handle(new \Exception(), new DataHolder());
+        $collection->handle(new Context(new \Exception));
 
         $this->assertTrue($firstNode->isCalled);
         $this->assertTrue($secondNode->isCalled);
@@ -132,7 +130,7 @@ class ChainNodeCollectionTest extends \PHPUnit_Framework_TestCase
         $collection->prepend($firstNode);
         $collection->prepend($secondNode);
 
-        $collection->handle(new \Exception(), new DataHolder());
+        $collection->handle(new Context(new \Exception));
 
         $this->assertTrue($firstNode->isCalled);
         $this->assertTrue($secondNode->isCalled);
@@ -155,7 +153,7 @@ class ChainNodeCollectionTest extends \PHPUnit_Framework_TestCase
         $collection->prepend($thirdNode);
         $collection->append($fourthNode);
 
-        $collection->handle(new \Exception(), new DataHolder());
+        $collection->handle(new Context(new \Exception));
 
         $this->assertTrue($firstNode->isCalled);
         $this->assertTrue($secondNode->isCalled);
@@ -168,8 +166,7 @@ class ChainNodeCollectionTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldBuildChainInRightOrder()
     {
-        $exception  = new \Exception();
-        $data       = new DataHolder();
+        $context = new Context(new \Exception);
         $collection = new ChainNodeCollection();
 
         $firstNode  = $this->createChainNodeMock();
@@ -205,10 +202,10 @@ class ChainNodeCollectionTest extends \PHPUnit_Framework_TestCase
         $thirdNode
             ->expects($this->once())
             ->method('handle')
-            ->with($exception, $data)
+            ->with($context)
         ;
 
-        $collection->handle($exception, $data);
+        $collection->handle($context);
     }
 
     /**
@@ -228,7 +225,7 @@ class ChainNodeCollectionTest extends \PHPUnit_Framework_TestCase
         $collection->append($thirdNode);
         $collection->append($fourthNode);
 
-        $collection->handle(new \Exception(), new DataHolder());
+        $collection->handle(new Context(new \Exception));
 
         $this->assertTrue($firstNode->isCalled);
         $this->assertTrue($secondNode->isCalled);
@@ -251,7 +248,7 @@ class ChainNodeCollectionTest extends \PHPUnit_Framework_TestCase
         $nextNode = new FailSafeChainNodeStub();
         $collection->nextNode($nextNode);
 
-        $collection->handle(new \Exception(), new DataHolder());
+        $collection->handle(new Context(new \Exception));
 
         $this->assertTrue($firstNode->isCalled);
         $this->assertFalse($nextNode->isCalled);
@@ -268,7 +265,6 @@ class ChainNodeCollectionTest extends \PHPUnit_Framework_TestCase
 
 
 use BadaBoom\ChainNode\AbstractChainNode;
-use BadaBoom\DataHolder\DataHolderInterface;
 
 class FailSafeChainNodeStub extends AbstractChainNode
 {
@@ -280,11 +276,11 @@ class FailSafeChainNodeStub extends AbstractChainNode
     /**
      * {@inheritdoc}
      */
-    public function handle(\Exception $exception, DataHolderInterface $data)
+    public function handle(Context $context)
     {
         $this->isCalled = true;
 
-        $this->handleNextNode($exception, $data);
+        $this->handleNextNode($context);
     }
 }
 
@@ -293,6 +289,5 @@ class DisastrousChainNodeStub extends AbstractChainNode
     /**
      * {@inheritdoc}
      */
-    public function handle(\Exception $exception, DataHolderInterface $data){}
+    public function handle(Context $context){}
 }
-

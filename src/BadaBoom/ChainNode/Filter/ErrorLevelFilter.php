@@ -1,7 +1,7 @@
 <?php
 namespace BadaBoom\ChainNode\Filter;
 
-use BadaBoom\DataHolder\DataHolderInterface;
+use BadaBoom\Context;
 
 class ErrorLevelFilter extends AbstractFilter
 {
@@ -21,14 +21,14 @@ class ErrorLevelFilter extends AbstractFilter
     /**
      * {@inheritdoc}
      */
-    public function shouldContinue(\Exception $exception, DataHolderInterface $data)
+    public function shouldContinue(Context $context)
     {
-        if (false == $exception instanceof \ErrorException) {
+        if (false == $context->getException() instanceof \ErrorException) {
             return true;
         }
 
         foreach ($this->denyErrors as $error) {
-            if ($error == $exception->getSeverity()) {
+            if ($error == $context->getException()->getSeverity()) {
                 return false;
             }
         }

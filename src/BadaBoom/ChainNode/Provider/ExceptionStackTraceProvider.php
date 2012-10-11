@@ -1,7 +1,7 @@
 <?php
 namespace BadaBoom\ChainNode\Provider;
 
-use BadaBoom\DataHolder\DataHolderInterface;
+use BadaBoom\Context;
 
 class ExceptionStackTraceProvider extends AbstractProvider
 {
@@ -21,10 +21,10 @@ class ExceptionStackTraceProvider extends AbstractProvider
     /**
      * {@inheritdoc}
      */
-    public function handle(\Exception $exception, DataHolderInterface $data)
+    public function handle(Context $context)
     {
-        $data->set($this->sectionName, (string) $exception);
+        $context->setVar($this->sectionName, (string) $context->getException());
 
-        $this->handleNextNode($exception, $data);
+        $this->handleNextNode($context);
     }
 }

@@ -1,9 +1,8 @@
 <?php
-
 namespace BadaBoom\Tests\ChainNode\Provider;
 
-use BadaBoom\DataHolder\DataHolder;
 use BadaBoom\ChainNode\Provider\SessionProvider;
+use BadaBoom\Context;
 
 class SessionProviderTest extends \PHPUnit_Framework_TestCase
 {
@@ -21,12 +20,12 @@ class SessionProviderTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldSetDefaultSectionNameIfNotProvided()
     {
-        $data = new DataHolder;
+        $context = new Context(new \Exception);
 
         $provider = new SessionProvider();
-        $provider->handle(new \Exception(), $data);
+        $provider->handle($context);
 
-        $this->assertTrue($data->has('session'));
+        $this->assertTrue($context->hasVar('session'));
     }
 
     /**
@@ -34,14 +33,15 @@ class SessionProviderTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldUseCustomSectionNameIfProvided()
     {
-        $data = new DataHolder;
+        $context = new Context(new \Exception);
 
         $expectedCustomSectionName = 'custom_section_name';
 
         $provider = new SessionProvider($expectedCustomSectionName);
-        $provider->handle(new \Exception(), $data);
+        $provider->handle($context);
 
-        $this->assertTrue($data->has($expectedCustomSectionName));
+        $this->assertTrue($context->hasVar($expectedCustomSectionName));
+        $this->assertFalse($context->hasVar('session'));
     }
 
     /**
@@ -51,12 +51,12 @@ class SessionProviderTest extends \PHPUnit_Framework_TestCase
     {
         unset($_SESSION);
 
-        $data = new DataHolder;
+        $context = new Context(new \Exception);
 
         $provider = new SessionProvider();
-        $provider->handle(new \Exception(), $data);
+        $provider->handle($context);
 
-        $this->assertEquals(array(), $data->get('session'));
+        $this->assertEquals(array(), $context->getVar('session'));
     }
 
     /**
@@ -68,12 +68,12 @@ class SessionProviderTest extends \PHPUnit_Framework_TestCase
         $_SESSION['foo'] = 'foo';
         $_SESSION['bar'] = 1;
 
-        $data = new DataHolder;
+        $context = new Context(new \Exception);
 
         $provider = new SessionProvider();
-        $provider->handle(new \Exception(), $data);
+        $provider->handle($context);
 
-        $this->assertEquals($_SESSION, $data->get('session'));
+        $this->assertEquals($_SESSION, $context->getVar('session'));
     }
 
     /**
@@ -81,23 +81,19 @@ class SessionProviderTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldDelegateHandlingToNextChainNode()
     {
-        $expectedExcpetion = new \Exception;
-        $expectedDataHolder = new DataHolder;
+        $context = new Context(new \Exception);
 
         $nextChainNode = $this->createChainNodeMock();
         $nextChainNode
             ->expects($this->once())
             ->method('handle')
-            ->with(
-                $this->equalTo($expectedExcpetion),
-                $this->equalTo($expectedDataHolder)
-            )
+            ->with($context)
         ;
 
         $provider = new SessionProvider();
         $provider->nextNode($nextChainNode);
 
-        $provider->handle($expectedExcpetion, $expectedDataHolder);
+        $provider->handle($context);
     }
 
     protected function createChainNodeMock()

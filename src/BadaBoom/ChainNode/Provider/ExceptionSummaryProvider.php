@@ -1,8 +1,7 @@
 <?php
-
 namespace BadaBoom\ChainNode\Provider;
 
-use BadaBoom\DataHolder\DataHolderInterface;
+use BadaBoom\Context;
 
 class ExceptionSummaryProvider extends AbstractProvider
 {
@@ -22,9 +21,11 @@ class ExceptionSummaryProvider extends AbstractProvider
     /**
      * {@inheritdoc}
      */
-    public function handle(\Exception $exception, DataHolderInterface $data)
+    public function handle(Context $context)
     {
-        $data->set($this->sectionName, array(
+        $exception = $context->getException();
+        
+        $context->setVar($this->sectionName, array(
             'class' => get_class($exception),
             'uri' => $this->getUri(),
             'code' => $this->getCode($exception),
@@ -32,7 +33,7 @@ class ExceptionSummaryProvider extends AbstractProvider
             'file' => "{$exception->getFile()}, Line: {$exception->getLine()}",
         ));
 
-        $this->handleNextNode($exception, $data);
+        $this->handleNextNode($context);
     }
 
     /**

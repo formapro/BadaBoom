@@ -1,9 +1,8 @@
 <?php
-
 namespace BadaBoom\Tests\ChainNode;
 
 use BadaBoom\ChainNode\CallbackChainNode;
-use BadaBoom\DataHolder\DataHolder;
+use BadaBoom\Context;
 
 /**
  * @author Vadim Tyukov <brainreflex@gmail.com>
@@ -58,18 +57,17 @@ class CallbackChainNodeTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldDelegateHandlingToCallback()
     {
-        $exception = new \Exception();
-        $data = new DataHolder();
+        $context = new Context(new \Exception);
 
         $callback = $this->getMock('BadaBoom\ChainNode\ChainNodeInterface');
         $callback
             ->expects($this->once())
             ->method('handle')
-            ->with($exception, $data)
+            ->with($context)
          ;
 
         $callbackNode = new CallbackChainNode(array($callback, 'handle'));
-        $callbackNode->handle($exception, $data);
+        $callbackNode->handle($context);
     }
 
     /**
@@ -77,8 +75,7 @@ class CallbackChainNodeTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldGiveControlToNextNode()
     {
-        $exception = new \Exception();
-        $data = new DataHolder();
+        $context = new Context(new \Exception);
 
         $nextNode = $this->createChainNodeMock();
 
@@ -88,10 +85,10 @@ class CallbackChainNodeTest extends \PHPUnit_Framework_TestCase
         $nextNode
             ->expects($this->once())
             ->method('handle')
-            ->with($exception, $data)
+            ->with($context)
         ;
 
-        $node->handle($exception, $data);
+        $node->handle($context);
     }
 
     /**
@@ -109,7 +106,7 @@ class CallbackChainNodeTest extends \PHPUnit_Framework_TestCase
 
         $node->nextNode($nextNode);
 
-        $node->handle(new \Exception(), new DataHolder());
+        $node->handle(new Context(new \Exception));
     }
 
     /**

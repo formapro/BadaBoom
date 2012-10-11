@@ -1,11 +1,11 @@
 <?php
-
 namespace BadaBoom\ChainNode\Sender;
 
 use Symfony\Component\Serializer\SerializerInterface;
 
 use BadaBoom\Adapter\Mailer\MailerAdapterInterface;
 use BadaBoom\DataHolder\DataHolderInterface;
+use BadaBoom\Context;
 
 class MailSender extends AbstractSender
 {
@@ -28,20 +28,17 @@ class MailSender extends AbstractSender
     /**
      * {@inheritdoc}
      */
-    public function handle(\Exception $exception, DataHolderInterface $data)
+    public function handle(Context $context)
     {
-        $serializedData = $this->serialize($data);
-        $subject = $data->get('subject', $this->configuration->get('subject'));
-
         $this->adapter->send(
             $this->configuration->get('sender'),
             $this->configuration->get('recipients'),
-            $subject,
-            $serializedData,
+            $context->getVar('subject', $this->configuration->get('subject')),
+            $this->serialize($context),
             $this->configuration->get('headers', array())
         );
 
-        $this->handleNextNode($exception, $data);
+        $this->handleNextNode($context);
     }
 
     /**

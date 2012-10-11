@@ -1,9 +1,8 @@
 <?php
-
 namespace BadaBoom\Tests\ChainNode\Provider;
 
-use BadaBoom\DataHolder\DataHolder;
 use BadaBoom\ChainNode\Provider\ExceptionSubjectProvider;
+use BadaBoom\Context;
 
 class ExceptionSubjectProviderTestCase extends \PHPUnit_Framework_TestCase
 {
@@ -19,18 +18,46 @@ class ExceptionSubjectProviderTestCase extends \PHPUnit_Framework_TestCase
     /**
      * @test
      */
+    public function shouldSetDefaultSectionNameIfNotProvided()
+    {
+        $context = new Context(new \Exception('foo'));
+
+        $provider = new ExceptionSubjectProvider();
+        $provider->handle($context);
+
+        $this->assertTrue($context->hasVar('subject'));
+    }
+
+    /**
+     *
+     * @test
+     */
+    public function shouldUseCustomSectionNameIfProvided()
+    {
+        $context = new Context(new \Exception('foo'));
+
+        $provider = new ExceptionSubjectProvider('barSection');
+        $provider->handle($context);
+
+        $this->assertTrue($context->hasVar('barSection'));
+        $this->assertFalse($context->hasVar('subject'));
+    }
+
+    /**
+     * @test
+     */
     public function shouldFillDataHolderWithSubject()
     {
         $exception = new \Exception('foo');
+        $context = new Context($exception);
+        
         $expectedSubject = 'Exception: ' . $exception->getMessage();
-
-        $data = new DataHolder();
 
         $provider = new ExceptionSubjectProvider();
 
-        $provider->handle($exception, $data);
+        $provider->handle($context);
 
-        $this->assertEquals($expectedSubject, $data->get('subject'));
+        $this->assertEquals($expectedSubject, $context->getVar('subject'));
     }
 
     /**
@@ -39,15 +66,14 @@ class ExceptionSubjectProviderTestCase extends \PHPUnit_Framework_TestCase
     public function shouldNotAddNamespaceOfExceptionToSubject()
     {
         $exception = new CustomException('foo');
+        $context = new Context($exception);
         $expectedSubject = 'CustomException: ' . $exception->getMessage();
-
-        $data = new DataHolder();
 
         $provider = new ExceptionSubjectProvider();
 
-        $provider->handle($exception, $data);
+        $provider->handle($context);
 
-        $this->assertEquals($expectedSubject, $data->get('subject'));
+        $this->assertEquals($expectedSubject, $context->getVar('subject'));
     }
 
     /**
@@ -55,16 +81,19 @@ class ExceptionSubjectProviderTestCase extends \PHPUnit_Framework_TestCase
      */
     public function shouldDelegateHandlingToTheNextNode()
     {
-        $exception = new \Exception('foo');
-        $data = new DataHolder();
+        $context = new Context(new \Exception('foo'));
 
         $nextNode = $this->getMockForAbstractClass('BadaBoom\ChainNode\AbstractChainNode');
-        $nextNode->expects($this->once())->method('handle')->with($this->equalTo($exception), $this->equalTo($data));
+        $nextNode
+            ->expects($this->once())
+            ->method('handle')
+            ->with($context)
+        ;
 
         $provider = new ExceptionSubjectProvider();
         $provider->nextNode($nextNode);
 
-        $provider->handle($exception, $data);
+        $provider->handle($context);
     }
 }
 

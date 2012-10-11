@@ -2,12 +2,12 @@
 namespace BadaBoom\ChainNode\Filter;
 
 use BadaBoom\Adapter\Cache\CacheAdapterInterface;
-use \BadaBoom\DataHolder\DataHolderInterface;
+use BadaBoom\Context;
 
 class DuplicateExceptionFilter extends AbstractFilter
 {
     /**
-     * @var BadaBoom\Adapter\Cache\CacheAdapterInterface
+     * @var CacheAdapterInterface
      */
     protected $cache;
 
@@ -17,7 +17,7 @@ class DuplicateExceptionFilter extends AbstractFilter
     protected $lifeTime;
 
     /**
-     * @param \BadaBoom\Adapter\Cache\CacheAdapterInterface $cache
+     * @param CacheAdapterInterface $cache
      * @param int $lifeTime
      */
     public function __construct(CacheAdapterInterface $cache, $lifeTime = 360)
@@ -29,9 +29,9 @@ class DuplicateExceptionFilter extends AbstractFilter
     /**
      * {@inheritdoc}
      */
-    public function shouldContinue(\Exception $exception, DataHolderInterface $data)
+    public function shouldContinue(Context $context)
     {
-        $cacheId = $this->generateCacheId($exception);
+        $cacheId = $this->generateCacheId($context->getException());
         if ($this->cache->contains($cacheId)) {
             return false;
         }

@@ -1,9 +1,9 @@
 <?php
-
 namespace BadaBoom\ChainNode\Sender;
 
 use BadaBoom\Adapter\Logger\LoggerAdapterInterface;
 use BadaBoom\DataHolder\DataHolderInterface;
+use BadaBoom\Context;
 
 use Symfony\Component\Serializer\SerializerInterface;
 
@@ -35,15 +35,13 @@ class LogSender extends AbstractSender
     /**
      * {@inheritdoc}
      */
-    public function handle(\Exception $exception, DataHolderInterface $data)
+    public function handle(Context $context)
     {
-        $content = $this->serialize($data);
-
         $this->adapter->log(
-            $content,
-            $data->get('log_level', $this->configuration->get('log_level', self::INFO))
+            $this->serialize($context),
+            $context->getVar('log_level', $this->configuration->get('log_level', self::INFO))
         );
         
-        $this->handleNextNode($exception, $data);
+        $this->handleNextNode($context);
     }
 }

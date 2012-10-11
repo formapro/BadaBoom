@@ -2,7 +2,7 @@
 namespace BadaBoom\ChainNode\Sender;
 
 use BadaBoom\ChainNode\AbstractChainNode;
-use BadaBoom\DataHolder\DataHolderInterface;
+use BadaBoom\Context;
 
 /**
  * @author Kotlyar Maksim <kotlyar.maksim@gmail.com>
@@ -24,10 +24,13 @@ class NewrelicSender extends AbstractChainNode
     /**
      * {@inheritdoc}
      */
-    public function handle(\Exception $exception, DataHolderInterface $data)
+    public function handle(Context $context)
     {
-        newrelic_notice_error($exception->getMessage(), $exception);
+        newrelic_notice_error(
+            $context->getException()->getMessage(), 
+            $context->getException()
+        );
         
-        $this->handleNextNode($exception, $data);
+        $this->handleNextNode($context);
     }
 }

@@ -1,9 +1,8 @@
 <?php
-
 namespace BadaBoom\Tests\ChainNode\Provider;
 
-use BadaBoom\DataHolder\DataHolder;
 use BadaBoom\ChainNode\Provider\ExceptionSummaryProvider;
+use BadaBoom\Context;
 
 class ExceptionSummaryProviderTest extends \PHPUnit_Framework_TestCase
 {
@@ -28,13 +27,12 @@ class ExceptionSummaryProviderTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldSetDefaultSectionNameIfNotProvided()
     {
-        $exception = new \Exception('foo');
-        $data = new DataHolder;
+        $context = new Context(new \Exception);
 
         $provider = new ExceptionSummaryProvider();
-        $provider->handle($exception, $data);
+        $provider->handle($context);
 
-        $this->assertTrue($data->has('summary'));
+        $this->assertTrue($context->hasVar('summary'));
     }
 
     /**
@@ -43,14 +41,13 @@ class ExceptionSummaryProviderTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldUseCustomSectionNameIfProvided()
     {
-        $exception = new \Exception('foo');
-        $data = new DataHolder();
+        $context = new Context(new \Exception);
 
         $provider = new ExceptionSummaryProvider('barSection');
-        $provider->handle($exception, $data);
+        $provider->handle($context);
 
-        $this->assertTrue($data->has('barSection'));
-        $this->assertFalse($data->has('summary'));
+        $this->assertTrue($context->hasVar('barSection'));
+        $this->assertFalse($context->hasVar('summary'));
     }
 
     /**
@@ -59,13 +56,12 @@ class ExceptionSummaryProviderTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldFillDataHolderWithExceptionInfo()
     {
-        $exception = new \Exception('foo', 123);
-        $data = new DataHolder();
+        $context = new Context(new \Exception('foo', 123));
 
         $provider = new ExceptionSummaryProvider();
-        $provider->handle($exception, $data);
+        $provider->handle($context);
 
-        $summary = $data->get('summary');
+        $summary = $context->getVar('summary');
         $this->assertInternalType('array', $summary);
 
         $this->assertArrayHasKey('class', $summary);
@@ -85,13 +81,12 @@ class ExceptionSummaryProviderTest extends \PHPUnit_Framework_TestCase
         $this->assertArrayNotHasKey('REQUEST_URI', $_SERVER);
         $this->assertArrayNotHasKey('argv', $_SERVER);
 
-        $exception = new \Exception('foo', 123);
-        $data = new DataHolder();
+        $context = new Context(new \Exception('foo', 123));
 
         $provider = new ExceptionSummaryProvider();
-        $provider->handle($exception, $data);
+        $provider->handle($context);
 
-        $summary = $data->get('summary');
+        $summary = $context->getVar('summary');
 
         $this->assertEquals('undefined', $summary['uri']);
     }
@@ -104,13 +99,12 @@ class ExceptionSummaryProviderTest extends \PHPUnit_Framework_TestCase
         $_SERVER['HTTP_HOST'] = 'badaboom.com';
         $_SERVER['REQUEST_URI'] = '/exception.html?foo=foo&bar=bar';
 
-        $exception = new \Exception('foo', 123);
-        $data = new DataHolder();
+        $context = new Context(new \Exception('foo', 123));
 
         $provider = new ExceptionSummaryProvider();
-        $provider->handle($exception, $data);
+        $provider->handle($context);
 
-        $summary = $data->get('summary');
+        $summary = $context->getVar('summary');
 
         $this->assertEquals('http://badaboom.com/exception.html?foo=foo&bar=bar', $summary['uri']);
     }
@@ -127,13 +121,12 @@ class ExceptionSummaryProviderTest extends \PHPUnit_Framework_TestCase
             '--foo=foo',
         );
 
-        $exception = new \Exception('foo', 123);
-        $data = new DataHolder();
+        $context = new Context(new \Exception('foo', 123));
 
         $provider = new ExceptionSummaryProvider();
-        $provider->handle($exception, $data);
+        $provider->handle($context);
 
-        $summary = $data->get('summary');
+        $summary = $context->getVar('summary');
 
         $this->assertEquals('php command bar --foo=foo', $summary['uri']);
     }
@@ -143,15 +136,14 @@ class ExceptionSummaryProviderTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldSetCodeForNotErrorExceptions()
     {
-        $expectedCode = 123;
+        $expectedCode = 321;
 
-        $exception = new \Exception('foo', $expectedCode);
-        $data = new DataHolder();
+        $context = new Context(new \Exception('foo', $expectedCode));
 
         $provider = new ExceptionSummaryProvider();
-        $provider->handle($exception, $data);
+        $provider->handle($context);
 
-        $summary = $data->get('summary');
+        $summary = $context->getVar('summary');
 
         $this->assertEquals($expectedCode, $summary['code']);
     }
@@ -162,12 +154,12 @@ class ExceptionSummaryProviderTest extends \PHPUnit_Framework_TestCase
     public function shouldSetHumanReadableSeverityForErrorException()
     {
         $exception = new \ErrorException('foo', $code = 123, E_COMPILE_ERROR, $file = 'foo', $line = 123);
-        $data = new DataHolder();
+        $context = new Context($exception);
 
         $provider = new ExceptionSummaryProvider();
-        $provider->handle($exception, $data);
+        $provider->handle($context);
 
-        $summary = $data->get('summary');
+        $summary = $context->getVar('summary');
 
         $this->assertEquals('E_COMPILE_ERROR', $summary['code']);
     }
@@ -180,33 +172,34 @@ class ExceptionSummaryProviderTest extends \PHPUnit_Framework_TestCase
         $notStandardSeverity = 556234;
 
         $exception = new \ErrorException('foo', $code = 123, $notStandardSeverity, $file = 'foo', $line = 123);
-        $data = new DataHolder();
+        $context = new Context($exception);
 
         $provider = new ExceptionSummaryProvider();
-        $provider->handle($exception, $data);
+        $provider->handle($context);
 
-        $summary = $data->get('summary');
+        $summary = $context->getVar('summary');
 
         $this->assertEquals('E_UNKNOWN', $summary['code']);
     }
 
-
     /**
-     *
      * @test
      */
     public function shouldDelegateHandlingToNextChainNode()
     {
-        $exception = new \Exception;
-        $data = new DataHolder;
+        $context = new Context(new \Exception);
 
         $nextChainNode = $this->createMockChainNode();
-        $nextChainNode->expects($this->once())->method('handle')->with($this->equalTo($exception), $this->equalTo($data));
+        $nextChainNode
+            ->expects($this->once())
+            ->method('handle')
+            ->with($context)
+        ;
 
         $provider = new ExceptionSummaryProvider();
         $provider->nextNode($nextChainNode);
 
-        $provider->handle($exception, $data);
+        $provider->handle($context);
     }
 
     protected function createMockChainNode()

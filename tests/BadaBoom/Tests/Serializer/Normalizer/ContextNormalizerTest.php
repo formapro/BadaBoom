@@ -1,23 +1,22 @@
 <?php
-
 namespace BadaBoom\Tests\Serializer\Normalizer;
 
-use BadaBoom\Serializer\Normalizer\DataHolderNormalizer;
-use BadaBoom\DataHolder\DataHolder;
+use BadaBoom\Context;
+use BadaBoom\Serializer\Normalizer\ContextNormalizer;
 
-class DataHolderNormalizerTest extends \PHPUnit_Framework_TestCase
+class ContextNormalizerTest extends \PHPUnit_Framework_TestCase
 {
     public static function provideSupportedNormalizations()
     {
         return array(
-            array(new DataHolder(), 'Should support normalization of DataHolder to all formats'),
+            array(new Context(new \Exception), 'Should support normalization of Context to all formats'),
         );
     }
 
     public static function provideNotSupportedNormalizations()
     {
         return array(
-            array(new \stdClass(),  'Should not support normalization of not DataHolder'),
+            array(new \stdClass(),  'Should not support normalization of not Context'),
             array('foo',            'Should not support normalization of strings'),
             array(array(),          'Should not support normalization of arrays'),
             array(123,              'Should not support normalization of numbers'),
@@ -28,22 +27,22 @@ class DataHolderNormalizerTest extends \PHPUnit_Framework_TestCase
     {
         return array(
             array(array('foo'), 'stdClass'),
-            array(array('foo'), 'BadaBoom\DataHolder\DataHolder'),
-            array('foo',        'BadaBoom\DataHolder\DataHolder'),
-            array(123,          'BadaBoom\DataHolder\DataHolder'),
+            array(array('foo'), 'BadaBoom\Context'),
+            array('foo',        'BadaBoom\Context'),
+            array(123,          'BadaBoom\Context'),
         );
     }
 
     /**
      * @test
      */
-    public function shouldNormalizeEmtpyDataHolderAsEmptyArray()
+    public function shouldNormalizeEmtpyContextAsEmptyArray()
     {
-        $data = new DataHolder();
+        $context = new Context(new \Exception);
 
-        $normalizer = new DataHolderNormalizer;
+        $normalizer = new ContextNormalizer;
 
-        $this->assertEquals(array(), $normalizer->normalize($data));
+        $this->assertEquals(array(), $normalizer->normalize($context));
     }
 
     /**
@@ -51,12 +50,12 @@ class DataHolderNormalizerTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldLeaveScalarsValuesAsIs()
     {
-        $data = new DataHolder();
-        $data->set('int', 555);
-        $data->set('str', 'bar');
-        $data->set('flt', 1.11);
+        $context = new Context(new \Exception);
+        $context->setVar('int', 555);
+        $context->setVar('str', 'bar');
+        $context->setVar('flt', 1.11);
 
-        $normalizer = new DataHolderNormalizer;
+        $normalizer = new ContextNormalizer;
 
         $this->assertEquals(
             array(
@@ -64,7 +63,7 @@ class DataHolderNormalizerTest extends \PHPUnit_Framework_TestCase
                 'str' => 'bar',
                 'flt' => 1.11
             ),
-            $normalizer->normalize($data)
+            $normalizer->normalize($context)
         );
     }
 
@@ -73,16 +72,16 @@ class DataHolderNormalizerTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldLeaveEmptySubArrayAsIs()
     {
-        $data = new DataHolder();
-        $data->set('subArray', array());
+        $context = new Context(new \Exception);
+        $context->setVar('subArray', array());
 
-        $normalizer = new DataHolderNormalizer;
+        $normalizer = new ContextNormalizer;
 
         $this->assertEquals(
             array(
                 'subArray' => array(),
             ),
-            $normalizer->normalize($data)
+            $normalizer->normalize($context)
         );
     }
 
@@ -91,16 +90,16 @@ class DataHolderNormalizerTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldVarExportObject()
     {
-        $data = new DataHolder();
-        $data->set('obj', new \stdClass());
+        $context = new Context(new \Exception);
+        $context->setVar('obj', new \stdClass());
 
-        $normalizer = new DataHolderNormalizer;
+        $normalizer = new ContextNormalizer;
 
         $this->assertEquals(
             array(
                 'obj' => var_export(new \stdClass(), true),
             ),
-            $normalizer->normalize($data)
+            $normalizer->normalize($context)
         );
     }
 
@@ -109,14 +108,14 @@ class DataHolderNormalizerTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldLeaveScalarInSubArrayAsIs()
     {
-        $data = new DataHolder();
-        $data->set('subArray', array(
+        $context = new Context(new \Exception);
+        $context->setVar('subArray', array(
             'int' => 555,
             'str' => 'bar',
             'flt' => 1.11
         ));
 
-        $normalizer = new DataHolderNormalizer;
+        $normalizer = new ContextNormalizer;
 
         $this->assertEquals(
             array(
@@ -126,7 +125,7 @@ class DataHolderNormalizerTest extends \PHPUnit_Framework_TestCase
                     'flt' => 1.11
                 ),
             ),
-            $normalizer->normalize($data)
+            $normalizer->normalize($context)
         );
     }
 
@@ -135,12 +134,12 @@ class DataHolderNormalizerTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldVarExporyArraysInSubArrays()
     {
-        $data = new DataHolder();
-        $data->set('subArray', array(
+        $context = new Context(new \Exception);
+        $context->setVar('subArray', array(
             'subSubArray' => array('foo' => 'foo'),
         ));
 
-        $normalizer = new DataHolderNormalizer;
+        $normalizer = new ContextNormalizer;
 
         $this->assertEquals(
             array(
@@ -148,7 +147,7 @@ class DataHolderNormalizerTest extends \PHPUnit_Framework_TestCase
                     'subSubArray' => var_export(array('foo' => 'foo'), true),
                 ),
             ),
-            $normalizer->normalize($data)
+            $normalizer->normalize($context)
         );
     }
 
@@ -157,12 +156,12 @@ class DataHolderNormalizerTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldVarExporyObjectsInSubArrays()
     {
-        $data = new DataHolder();
-        $data->set('subArray', array(
+        $context = new Context(new \Exception);
+        $context->setVar('subArray', array(
             'obj' => new \stdClass(),
         ));
 
-        $normalizer = new DataHolderNormalizer;
+        $normalizer = new ContextNormalizer;
 
         $this->assertEquals(
             array(
@@ -170,7 +169,7 @@ class DataHolderNormalizerTest extends \PHPUnit_Framework_TestCase
                     'obj' => var_export(new \stdClass(), true),
                 ),
             ),
-            $normalizer->normalize($data)
+            $normalizer->normalize($context)
         );
     }
 
@@ -179,7 +178,7 @@ class DataHolderNormalizerTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldBeSubclassOfAbstractProvider()
     {
-        $rc = new \ReflectionClass('BadaBoom\Serializer\Normalizer\DataHolderNormalizer');
+        $rc = new \ReflectionClass('BadaBoom\Serializer\Normalizer\ContextNormalizer');
         $this->assertTrue($rc->implementsInterface('Symfony\Component\Serializer\Normalizer\NormalizerInterface'));
     }
 
@@ -189,11 +188,11 @@ class DataHolderNormalizerTest extends \PHPUnit_Framework_TestCase
      *
      * @dataProvider provideSupportedNormalizations
      */
-    public function shouldSupportNormalizationOf($data, $failMessage)
+    public function shouldSupportNormalizationOf($context, $failMessage)
     {
-        $normalizer = new DataHolderNormalizer;
+        $normalizer = new ContextNormalizer;
 
-        $this->assertTrue($normalizer->supportsNormalization($data), $failMessage);
+        $this->assertTrue($normalizer->supportsNormalization($context), $failMessage);
     }
 
     /**
@@ -205,7 +204,7 @@ class DataHolderNormalizerTest extends \PHPUnit_Framework_TestCase
      */
     public function throwIfTryToNormalizeNotSupportedData($notSupportedData)
     {
-        $normalizer = new DataHolderNormalizer;
+        $normalizer = new ContextNormalizer;
 
         $normalizer->normalize($notSupportedData);
     }
@@ -216,11 +215,11 @@ class DataHolderNormalizerTest extends \PHPUnit_Framework_TestCase
      *
      * @dataProvider provideNotSupportedNormalizations
      */
-    public function shouldNotSupportNormalizationOf($data, $failMessage)
+    public function shouldNotSupportNormalizationOf($context, $failMessage)
     {
-        $normalizer = new DataHolderNormalizer;
+        $normalizer = new ContextNormalizer;
 
-        $this->assertFalse($normalizer->supportsNormalization($data), $failMessage);
+        $this->assertFalse($normalizer->supportsNormalization($context), $failMessage);
     }
 
     /**
@@ -229,11 +228,11 @@ class DataHolderNormalizerTest extends \PHPUnit_Framework_TestCase
      *
      * @dataProvider provideNotSupportedDenormalizations
      */
-    public function shouldNotSupportAnyDenormalizations($data, $type)
+    public function shouldNotSupportAnyDenormalizations($context, $type)
     {
-        $normalizer = new DataHolderNormalizer;
+        $normalizer = new ContextNormalizer;
 
-        $this->assertFalse($normalizer->supportsDenormalization($data, $type), 'Should not support any kinds of denormalization');
+        $this->assertFalse($normalizer->supportsDenormalization($context, $type), 'Should not support any kinds of denormalization');
     }
 
     /**
@@ -245,10 +244,10 @@ class DataHolderNormalizerTest extends \PHPUnit_Framework_TestCase
      * @expectedException Symfony\Component\Serializer\Exception\UnsupportedException
      * @expectedExceptionMessage Denormalization of any formats is not supported.
      */
-    public function throwAlwaysOnDenormalizeCall($data, $type)
+    public function throwAlwaysOnDenormalizeCall($context, $type)
     {
-        $normalizer = new DataHolderNormalizer;
+        $normalizer = new ContextNormalizer;
 
-        $normalizer->denormalize($data, $type);
+        $normalizer->denormalize($context, $type);
     }
 }

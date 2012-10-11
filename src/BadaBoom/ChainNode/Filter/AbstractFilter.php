@@ -1,28 +1,27 @@
 <?php
 namespace BadaBoom\ChainNode\Filter;
 
-use BadaBoom\DataHolder\DataHolderInterface;
 use BadaBoom\ChainNode\AbstractChainNode;
+use BadaBoom\Context;
 
 abstract class AbstractFilter extends AbstractChainNode
 {
     /**
      * {@inheritdoc}
      */
-    public final function handle(\Exception $exception, DataHolderInterface $data)
+    public final function handle(Context $context)
     {
-        if ($this->shouldContinue($exception, $data)) {
-            $this->handleNextNode($exception, $data);
+        if ($this->shouldContinue($context)) {
+            $this->handleNextNode($context);
         }
     }
 
     /**
      * @abstract
      *
-     * @param \Exception $exception
-     * @param \BadaBoom\DataHolder\DataHolderInterface $data
+     * @param Context $context
      *
      * @return boolean
      */
-    abstract public function shouldContinue(\Exception $exception, DataHolderInterface $data);
+    abstract public function shouldContinue(Context $context);
 }

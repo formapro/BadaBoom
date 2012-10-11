@@ -1,15 +1,14 @@
 <?php
-
 namespace BadaBoom\Tests\ChainNode\Sender;
 
 use BadaBoom\DataHolder\DataHolder;
+use BadaBoom\Context;
 
 use Symfony\Component\Serializer\Serializer;
 
 class AbstractSenderTestCase extends \PHPUnit_Framework_TestCase
 {
     /**
-     *
      * @test
      */
     public function shouldBeSubClassOfAbstractChainNode()
@@ -26,11 +25,10 @@ class AbstractSenderTestCase extends \PHPUnit_Framework_TestCase
      */
     public function throwWhenFormatIsNotGivenInConstructor()
     {
-        $this->createSender($this->createMockAdapter(), $this->createMockSerializer(), new DataHolder());
+        $this->createSenderMock($this->createAdapterMock(), $this->createSerializerMock(), new DataHolder());
     }
 
     /**
-     *
      * @test
      *
      * @depends throwWhenFormatIsNotGivenInConstructor
@@ -39,7 +37,7 @@ class AbstractSenderTestCase extends \PHPUnit_Framework_TestCase
     {
         $format = 'html';
 
-        $serializer = $this->createMockSerializer();
+        $serializer = $this->createSerializerMock();
         $serializer->expects($this->once())
             ->method('supportsEncoding')
             ->with($format)
@@ -49,11 +47,10 @@ class AbstractSenderTestCase extends \PHPUnit_Framework_TestCase
         $configuration = new DataHolder();
         $configuration->set('format', $format);
 
-        $this->createSender($this->createMockAdapter(), $serializer, $configuration);
+        $this->createSenderMock($this->createAdapterMock(), $serializer, $configuration);
     }
 
     /**
-     *
      * @test
      *
      * @expectedException \InvalidArgumentException
@@ -62,7 +59,7 @@ class AbstractSenderTestCase extends \PHPUnit_Framework_TestCase
     public function throwWhenTryConstructWithUnsupportedSerializeFormat()
     {
         $format = 'unsupported-format';
-        $serializer = $this->createMockSerializer();
+        $serializer = $this->createSerializerMock();
         $serializer->expects($this->once())
             ->method('supportsEncoding')
             ->with($format)
@@ -72,16 +69,15 @@ class AbstractSenderTestCase extends \PHPUnit_Framework_TestCase
         $configuration = new DataHolder();
         $configuration->set('format', $format);
 
-        $this->createSender($this->createMockAdapter(), $serializer, $configuration);
+        $this->createSenderMock($this->createAdapterMock(), $serializer, $configuration);
     }
 
     /**
-     *
      * @test
      */
     public function shouldSerializeDataToSetFormatInConfiguration()
     {
-        $data = new DataHolder();
+        $context = new Context(new \Exception);
         $format = 'html';
 
         $configuration = new DataHolder();
@@ -95,16 +91,15 @@ class AbstractSenderTestCase extends \PHPUnit_Framework_TestCase
         ;
         $serializer = new Serializer(array(), array($format => $encoder));
 
-        $sender = $this->createSender($this->createMockAdapter(), $serializer, $configuration);
+        $sender = $this->createSenderMock($this->createAdapterMock(), $serializer, $configuration);
 
-        $sender->serialize($data);
+        $sender->serialize($context);
     }
 
     /**
-     *
      * @return \PHPUnit_Framework_MockObject_MockObject
      */
-    protected function createMockAdapter()
+    protected function createAdapterMock()
     {
         return $this->getMock('BadaBoom\Adapter\SenderAdapterInterface');
     }
@@ -113,7 +108,7 @@ class AbstractSenderTestCase extends \PHPUnit_Framework_TestCase
      *
      * @return \PHPUnit_Framework_MockObject_MockObject
      */
-    protected function createMockSerializer()
+    protected function createSerializerMock()
     {
         return $this->getMock('Symfony\Component\Serializer\Serializer');
     }
@@ -125,14 +120,13 @@ class AbstractSenderTestCase extends \PHPUnit_Framework_TestCase
      * 
      * @return AbstractSender
      */
-    protected function createSender($adapter, $serializer, $configuration)
+    protected function createSenderMock($adapter, $serializer, $configuration)
     {
         $class = $this->getSenderClass();
         return new $class($adapter, $serializer, $configuration);
     }
 
     /**
-     *
      * @return string
      */
     protected function getSenderClass()

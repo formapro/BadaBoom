@@ -2,7 +2,7 @@
 namespace BadaBoom\Tests\ChainNode\Decorator;
 
 use BadaBoom\ChainNode\Decorator\SafeChainNodeDecorator;
-use BadaBoom\DataHolder\DataHolder;
+use BadaBoom\Context;
 
 class SafeChainNodeDecoratorTest extends \PHPUnit_Framework_TestCase
 {
@@ -20,7 +20,7 @@ class SafeChainNodeDecoratorTest extends \PHPUnit_Framework_TestCase
      */
     public function couldBeConstructedWithChainNodeAsArgument()
     {
-        new SafeChainNodeDecorator($this->createChainNode());
+        new SafeChainNodeDecorator($this->createChainNodeMock());
     }
 
     /**
@@ -28,22 +28,18 @@ class SafeChainNodeDecoratorTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldProxyHandleToChainNodeSetInConstructor()
     {
-        $expectedException = new \Exception();
-        $expectedDataHolderMock = $this->createDataHolderMock();
-
-        $chainNodeMock = $this->createChainNode();
+        $expectedContext = new Context(new \Exception());
+        
+        $chainNodeMock = $this->createChainNodeMock();
         $chainNodeMock
             ->expects($this->once())
             ->method('handle')
-            ->with(
-                $this->equalTo($expectedException),
-                $this->equalTo($expectedDataHolderMock)
-            )
+            ->with($expectedContext)
         ;
 
         $safe = new SafeChainNodeDecorator($chainNodeMock);
 
-        $safe->handle($expectedException, $expectedDataHolderMock);
+        $safe->handle($expectedContext);
     }
 
     /**
@@ -51,15 +47,13 @@ class SafeChainNodeDecoratorTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldProxyNextNodeToChainNodeSetInConstructor()
     {
-        $expectedNextChainNode = $this->createChainNode();
+        $expectedNextChainNode = $this->createChainNodeMock();
 
-        $chainNodeMock = $this->createChainNode();
+        $chainNodeMock = $this->createChainNodeMock();
         $chainNodeMock
-                ->expects($this->once())
-                ->method('nextNode')
-                ->with(
-            $this->equalTo($expectedNextChainNode)
-        )
+            ->expects($this->once())
+            ->method('nextNode')
+            ->with($expectedNextChainNode)
         ;
 
         $safe = new SafeChainNodeDecorator($chainNodeMock);
@@ -72,9 +66,9 @@ class SafeChainNodeDecoratorTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldReturnResultOfInternalChainNodeWhileNextNodeCall()
     {
-        $expectedNextNodeChainNode = $this->createChainNode();
+        $expectedNextNodeChainNode = $this->createChainNodeMock();
 
-        $chainNodeMock = $this->createChainNode();
+        $chainNodeMock = $this->createChainNodeMock();
         $chainNodeMock
             ->expects($this->any())
             ->method('nextNode')
@@ -89,11 +83,12 @@ class SafeChainNodeDecoratorTest extends \PHPUnit_Framework_TestCase
     /**
      * @test
      */
-    public function shouldSetChainClassToDataHolderIfThrownWhileHandlingInternalChainNode()
+    public function shouldSetChainClassToContextIfThrownWhileHandlingInternalChainNode()
     {
         $internalException = new \Exception('internal exception message', 123);
+        $context = new Context(new \Exception());
 
-        $chainNodeMock = $this->createChainNode();
+        $chainNodeMock = $this->createChainNodeMock();
         $chainNodeMock
             ->expects($this->once())
             ->method('handle')
@@ -102,24 +97,26 @@ class SafeChainNodeDecoratorTest extends \PHPUnit_Framework_TestCase
 
         $safe = new SafeChainNodeDecorator($chainNodeMock);
 
-        $safe->handle(new \Exception(), $dataHolder = new DataHolder());
+        $safe->handle($context);
 
-        $chainExceptions = $dataHolder->get('chain_exceptions');
-        $this->assertCount(1, $chainExceptions);
-
-        $chainException = array_shift($chainExceptions);
-        $this->assertArrayHasKey('chain', $chainException);
-        $this->assertEquals(get_class($chainNodeMock), $chainException['chain']);
+        $this->assertTrue($context->hasVar('chain_exceptions'));
+        $this->assertInternalType('array', $context->getVar('chain_exceptions'));
+        
+        $chainExceptions = $context->getVar('chain_exceptions');
+        $this->assertCount(1,  $chainExceptions);
+        $this->assertArrayHasKey('chain', $chainExceptions[0]);
+        $this->assertEquals(get_class($chainNodeMock), $chainExceptions[0]['chain']);
     }
 
     /**
      * @test
      */
-    public function shouldSetExceptionInfoToDataHolderIfThrownWhileHandlingInternalChainNode()
+    public function shouldSetExceptionInfoToContextIfThrownWhileHandlingInternalChainNode()
     {
-        $internalException = new \Exception('internal exception message', 123);
+        $internalException = new \InvalidArgumentException('internal exception message', 123);
+        $context = new Context(new \Exception());
 
-        $chainNodeMock = $this->createChainNode();
+        $chainNodeMock = $this->createChainNodeMock();
         $chainNodeMock
             ->expects($this->once())
             ->method('handle')
@@ -128,81 +125,15 @@ class SafeChainNodeDecoratorTest extends \PHPUnit_Framework_TestCase
 
         $safe = new SafeChainNodeDecorator($chainNodeMock);
 
-        $safe->handle(new \Exception(), $dataHolder = new DataHolder());
+        $safe->handle($context);
 
-        $chainExceptions = $dataHolder->get('chain_exceptions');
-        $this->assertCount(1, $chainExceptions);
+        $this->assertTrue($context->hasVar('chain_exceptions'));
+        $this->assertInternalType('array', $context->getVar('chain_exceptions'));
 
-        $chainException = array_shift($chainExceptions);
-
-        $this->assertArrayHasKey('class', $chainException);
-        $this->assertEquals(get_class($internalException), $chainException['class']);
-
-        $this->assertArrayHasKey('message', $chainException);
-        $this->assertEquals($internalException->getMessage(), $chainException['message']);
-
-        $this->assertArrayHasKey('code', $chainException);
-        $this->assertEquals($internalException->getCode(), $chainException['code']);
-
-        $this->assertArrayHasKey('line', $chainException);
-        $this->assertEquals($internalException->getLine(), $chainException['line']);
-
-        $this->assertArrayHasKey('file', $chainException);
-        $this->assertEquals($internalException->getFile(), $chainException['file']);
-    }
-
-    /**
-     * @test
-     */
-    public function shouldNotSetExceptionPreviousInfoToDataHolderIfThrownWhileHandlingInternalChainNode()
-    {
-        $internalException = new \Exception('internal exception message', 123);
-
-        $chainNodeMock = $this->createChainNode();
-        $chainNodeMock
-            ->expects($this->once())
-            ->method('handle')
-            ->will($this->throwException($internalException))
-        ;
-
-        $safe = new SafeChainNodeDecorator($chainNodeMock);
-
-        $safe->handle(new \Exception(), $dataHolder = new DataHolder());
-
-        $chainExceptions = $dataHolder->get('chain_exceptions');
-        $this->assertCount(1, $chainExceptions);
-
-        $chainException = array_shift($chainExceptions);
-
-        $this->assertArrayHasKey('has_previous', $chainException);
-        $this->assertFalse($chainException['has_previous']);
-    }
-
-    /**
-     * @test
-     */
-    public function shouldSetExceptionPreviousInfoToDataHolderIfThrownWhileHandlingInternalChainNode()
-    {
-        $internalException = new \Exception('internal exception message', 123, new \Exception());
-
-        $chainNodeMock = $this->createChainNode();
-        $chainNodeMock
-                ->expects($this->once())
-                ->method('handle')
-                ->will($this->throwException($internalException))
-        ;
-
-        $safe = new SafeChainNodeDecorator($chainNodeMock);
-
-        $safe->handle(new \Exception(), $dataHolder = new DataHolder());
-
-        $chainExceptions = $dataHolder->get('chain_exceptions');
-        $this->assertCount(1, $chainExceptions);
-
-        $chainException = array_shift($chainExceptions);
-
-        $this->assertArrayHasKey('has_previous', $chainException);
-        $this->assertTrue($chainException['has_previous']);
+        $chainExceptions = $context->getVar('chain_exceptions');
+        $this->assertCount(1,  $chainExceptions);
+        $this->assertArrayHasKey('exception', $chainExceptions[0]);
+        $this->assertEquals((string) $internalException, $chainExceptions[0]['exception']);
     }
 
     /**
@@ -211,9 +142,9 @@ class SafeChainNodeDecoratorTest extends \PHPUnit_Framework_TestCase
     public function shouldNotReplacePreviouslyAddedChainExceptions()
     {
         $internalException = new \Exception();
-        $dataHolder = new DataHolder();
+        $context = new Context(new \Exception());
 
-        $chainNodeMock = $this->createChainNode();
+        $chainNodeMock = $this->createChainNodeMock();
         $chainNodeMock
                 ->expects($this->exactly(2))
                 ->method('handle')
@@ -222,22 +153,20 @@ class SafeChainNodeDecoratorTest extends \PHPUnit_Framework_TestCase
 
         $safe = new SafeChainNodeDecorator($chainNodeMock);
 
-        $safe->handle(new \Exception(), $dataHolder);
+        $safe->handle($context);
 
-        $this->assertCount(1, $dataHolder->get('chain_exceptions'));
+        $this->assertCount(1, $context->getVar('chain_exceptions'));
 
-        $safe->handle(new \Exception(), $dataHolder);
+        $safe->handle($context);
 
-        $this->assertCount(2, $dataHolder->get('chain_exceptions'));
+        $this->assertCount(2, $context->getVar('chain_exceptions'));
     }
 
-    protected function createChainNode()
+    /**
+     * @return \PHPUnit_Framework_MockObject_MockObject|\BadaBoom\ChainNode\ChainNodeInterface
+     */
+    protected function createChainNodeMock()
     {
         return $this->getMock('BadaBoom\ChainNode\ChainNodeInterface');
-    }
-
-    protected function createDataHolderMock()
-    {
-        return $this->getMock('BadaBoom\DataHolder\DataHolderInterface');
     }
 }

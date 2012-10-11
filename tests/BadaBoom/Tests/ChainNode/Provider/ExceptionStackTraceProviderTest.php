@@ -1,14 +1,12 @@
 <?php
-
 namespace BadaBoom\Tests\ChainNode\Provider;
 
-use BadaBoom\DataHolder\DataHolder;
 use BadaBoom\ChainNode\Provider\ExceptionStackTraceProvider;
+use BadaBoom\Context;
 
 class ExceptionStackTraceProviderTest extends \PHPUnit_Framework_TestCase
 {
     /**
-     *
      * @test
      */
     public function shouldBeSubclassOfAbstractProvider()
@@ -18,18 +16,16 @@ class ExceptionStackTraceProviderTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     *
      * @test
      */
     public function shouldSetDefaultSectionNameIfNotProvided()
     {
-        $exception = new \Exception('foo');
-        $data = new DataHolder;
+        $context = new Context(new \Exception('foo'));
 
         $provider = new ExceptionStackTraceProvider();
-        $provider->handle($exception, $data);
+        $provider->handle($context);
 
-        $this->assertTrue($data->has('stacktrace'));
+        $this->assertTrue($context->hasVar('stacktrace'));
     }
 
     /**
@@ -38,14 +34,13 @@ class ExceptionStackTraceProviderTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldUseCustomSectionNameIfProvided()
     {
-        $exception = new \Exception('foo');
-        $data = new DataHolder();
+        $context = new Context(new \Exception('foo'));
 
         $provider = new ExceptionStackTraceProvider('barSection');
-        $provider->handle($exception, $data);
+        $provider->handle($context);
 
-        $this->assertTrue($data->has('barSection'));
-        $this->assertFalse($data->has('summary'));
+        $this->assertTrue($context->hasVar('barSection'));
+        $this->assertFalse($context->hasVar('stacktrace'));
     }
 
     /**
@@ -54,15 +49,16 @@ class ExceptionStackTraceProviderTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldFillDataHolderWithExceptionStackTrace()
     {
-        $exception = new \Exception('foo');
-        $data = new DataHolder();
+        $context = new Context(new \Exception('foo'));
 
         $provider = new ExceptionStackTraceProvider();
-        $provider->handle($exception, $data);
+        $provider->handle($context);
 
-        $stacktrace = $data->get('stacktrace');
-        $this->assertInternalType('string', $stacktrace);
-        $this->assertEquals((string) $exception, $stacktrace);
+        $this->assertInternalType('string', $context->getVar('stacktrace'));
+        $this->assertEquals(
+            (string) $context->getException(), 
+            $context->getVar('stacktrace')
+        );
     }
 
     /**
@@ -71,16 +67,19 @@ class ExceptionStackTraceProviderTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldDelegateHandlingToNextChainNode()
     {
-        $exception = new \Exception;
-        $data = new DataHolder;
+        $context = new Context(new \Exception('foo'));
 
         $nextChainNode = $this->createMockChainNode();
-        $nextChainNode->expects($this->once())->method('handle')->with($this->equalTo($exception), $this->equalTo($data));
+        $nextChainNode
+            ->expects($this->once())
+            ->method('handle')
+            ->with($context)
+        ;
 
         $provider = new ExceptionStackTraceProvider();
         $provider->nextNode($nextChainNode);
 
-        $provider->handle($exception, $data);
+        $provider->handle($context);
     }
 
     protected function createMockChainNode()

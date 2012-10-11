@@ -1,7 +1,7 @@
 <?php
 namespace BadaBoom\Tests\ChainNode\Filter;
 
-use BadaBoom\DataHolder\DataHolder;
+use BadaBoom\Context;
 use BadaBoom\ChainNode\Filter\ErrorLevelFilter;
 
 class ErrorLevelFilterTest extends \PHPUnit_Framework_TestCase
@@ -30,14 +30,13 @@ class ErrorLevelFilterTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldAlwaysPropagateNoErrorException()
     {
-        $exception = new \Exception('foo');
-        $data = new DataHolder;
+        $context = new Context(new \Exception('foo'));
 
         $filter = new ErrorLevelFilter();
 
         $filter->deny(E_ALL);
 
-        $this->assertTrue($filter->shouldContinue($exception, $data));
+        $this->assertTrue($filter->shouldContinue($context));
     }
 
     /**
@@ -45,12 +44,11 @@ class ErrorLevelFilterTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldPropagateIfNoRulesDefined()
     {
-        $exception = new \ErrorException('foo', null, E_NOTICE, 'foo', '123');
-        $data = new DataHolder;
+        $context = new Context(new \ErrorException('foo', null, E_NOTICE, 'foo', '123'));
 
         $filter = new ErrorLevelFilter();
 
-        $this->assertTrue($filter->shouldContinue($exception, $data));
+        $this->assertTrue($filter->shouldContinue($context));
     }
 
     /**
@@ -58,12 +56,11 @@ class ErrorLevelFilterTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldFilterDeniedErrors()
     {
-        $exception = new \ErrorException('foo', null, E_WARNING);
-        $data = new DataHolder;
+        $context = new Context(new \ErrorException('foo', null, E_WARNING));
 
         $filter = new ErrorLevelFilter();
         $filter->deny(E_WARNING);
 
-        $this->assertFalse($filter->shouldContinue($exception, $data));
+        $this->assertFalse($filter->shouldContinue($context));
     }
 }

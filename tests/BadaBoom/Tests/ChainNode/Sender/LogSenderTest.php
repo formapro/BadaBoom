@@ -1,11 +1,11 @@
 <?php
-
 namespace BadaBoom\Tests\ChainNode\Sender;
 
 use Symfony\Component\Serializer\Serializer;
 
 use BadaBoom\ChainNode\Sender\LogSender;
 use BadaBoom\DataHolder\DataHolder;
+use BadaBoom\Context;
 
 class LogSenderTestCase extends \PHPUnit_Framework_TestCase
 {
@@ -42,17 +42,18 @@ class LogSenderTestCase extends \PHPUnit_Framework_TestCase
     /**
      * @test
      */
-    public function shouldLogDataWithLevelGivenByProvider()
+    public function shouldLogDataWithLevelGivenByContext()
     {
         $configuration = new DataHolder();
         $configuration->set('format', 'json');
         $configuration->set('log_level', LogSender::ALERT);
 
-        $data = new DataHolder();
-        $data->set('log_level', LogSender::CRITICAL);
+        $context = new Context(new \Exception);
+        $context->setVar('log_level', LogSender::CRITICAL);
         $serializedData = 'Hey! Log me.';
 
-        $this->assertNotEquals($configuration->get('log_level'), $data->get('log_level'));
+        //guard
+        $this->assertNotEquals($configuration->get('log_level'), $context->getVar('log_level'));
 
         $encoder = $this->getMock('Symfony\Component\Serializer\Encoder\EncoderInterface');
         $encoder->expects($this->once())
@@ -70,11 +71,11 @@ class LogSenderTestCase extends \PHPUnit_Framework_TestCase
         $adapter = $this->getMock('BadaBoom\Adapter\Logger\LoggerAdapterInterface');
         $adapter->expects($this->once())
             ->method('log')
-            ->with($serializedData, $data->get('log_level'))
+            ->with($serializedData, $context->getVar('log_level'))
         ;
 
         $sender = new LogSender($adapter, $serializer, $configuration);
-        $sender->handle(new \Exception(), $data);
+        $sender->handle($context);
     }
 
     /**
@@ -86,7 +87,7 @@ class LogSenderTestCase extends \PHPUnit_Framework_TestCase
         $configuration->set('log_level', LogSender::CRITICAL);
         $configuration->set('format', 'json');
 
-        $data = new DataHolder();
+        $context = new Context(new \Exception);
         $serializedData = 'Hey! Log me.';
 
         $encoder = $this->getMock('Symfony\Component\Serializer\Encoder\EncoderInterface');
@@ -105,7 +106,7 @@ class LogSenderTestCase extends \PHPUnit_Framework_TestCase
         ;
 
         $sender = new LogSender($adapter, $serializer, $configuration);
-        $sender->handle(new \Exception(), $data);
+        $sender->handle($context);
     }
 
     /**
@@ -116,7 +117,7 @@ class LogSenderTestCase extends \PHPUnit_Framework_TestCase
         $configuration = new DataHolder();
         $configuration->set('format', 'json');
 
-        $data = new DataHolder();
+        $context = new Context(new \Exception);
         $serializedData = 'Hey! Log me.';
 
         $encoder = $this->getMock('Symfony\Component\Serializer\Encoder\EncoderInterface');
@@ -135,7 +136,7 @@ class LogSenderTestCase extends \PHPUnit_Framework_TestCase
         ;
 
         $sender = new LogSender($adapter, $serializer, $configuration);
-        $sender->handle(new \Exception(), $data);
+        $sender->handle($context);
     }
 
     /**

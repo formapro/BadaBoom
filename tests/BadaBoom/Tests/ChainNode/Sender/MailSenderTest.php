@@ -1,16 +1,15 @@
 <?php
-
 namespace BadaBoom\Tests\ChainNode\Sender;
 
 use BadaBoom\ChainNode\Sender\MailSender;
 use BadaBoom\DataHolder\DataHolder;
+use BadaBoom\Context;
 
 use Symfony\Component\Serializer\Serializer;
 
 class MailSenderTest extends \PHPUnit_Framework_TestCase
 {
     /**
-     * 
      * @test
      */
     public function shouldBeSubClassOfAbstractSender()
@@ -20,7 +19,6 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     *
      * @test
      *
      * @expectedException \InvalidArgumentException
@@ -123,7 +121,7 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldSendSerializedContentAccordingGivenConfiguration()
     {
-        $data = new DataHolder();
+        $context = new Context(new \Exception);
         $serializedData = 'Plain text';
         $configuration = $this->getFullConfiguration();
 
@@ -153,7 +151,7 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
         ;
         $sender = new MailSender($adapter, $serializer, $configuration);
 
-        $sender->handle(new \Exception, $data);
+        $sender->handle($context);
     }
 
     /**
@@ -161,10 +159,8 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldTakeSubjectFromHandledDataInsteadOfConfigurationValue()
     {
-        $exception = new \Exception;
-
-        $data = new DataHolder();
-        $data->set('subject', 'Hey! There is an error.');
+        $context = new Context(new \Exception);
+        $context->setVar('subject', 'Hey! There is an error.');
 
         $configuration = new DataHolder();
         $configuration->set('format', 'html');
@@ -183,14 +179,14 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
             ->with(
                 $configuration->get('sender'),
                 $configuration->get('recipients'),
-                $data->get('subject'),
+                $context->getVar('subject'),
                 null,
                 array()
             )
         ;
 
         $sender = new MailSender($adapter, $serializer, $configuration);
-        $sender->handle($exception, $data);
+        $sender->handle($context);
     }
 
     /**
@@ -199,8 +195,7 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
     public function shouldSendEmptySubjectIfItWasNotSetBefore()
     {
         $emptySubject = null;
-        $exception = new \Exception;
-        $data = new DataHolder();
+        $context = new Context(new \Exception);
 
         $configuration = new DataHolder();
         $configuration->set('format', 'html');
@@ -226,7 +221,7 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
         ;
 
         $sender = new MailSender($adapter, $serializer, $configuration);
-        $sender->handle($exception, $data);
+        $sender->handle($context);
     }
 
     /**
@@ -235,8 +230,7 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
     public function shouldSendEmptyHeadersListIfItWasNotSetBefore()
     {
         $emptyHeaderList = array();
-        $exception = new \Exception;
-        $data = new DataHolder();
+        $context = new Context(new \Exception);
 
         $configuration = new DataHolder();
         $configuration->set('format', 'html');
@@ -261,7 +255,7 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
         ;
 
         $sender = new MailSender($adapter, $serializer, $configuration);
-        $sender->handle($exception, $data);
+        $sender->handle($context);
     }
 
     /**
@@ -269,8 +263,7 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldSendMailAndDelegateHandlingToNextChainNode()
     {
-        $exception = new \Exception;
-        $data = new DataHolder();
+        $context = new Context(new \Exception);
         $configuration = $this->getFullConfiguration();
 
         $encoder = $this->getMock('Symfony\Component\Serializer\Encoder\EncoderInterface');
@@ -282,12 +275,16 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
         $adapter->expects($this->any())->method('send');
 
         $nextChainNode = $this->createMockChainNode();
-        $nextChainNode->expects($this->once())->method('handle')->with($this->equalTo($exception), $this->equalTo($data));
+        $nextChainNode
+            ->expects($this->once())
+            ->method('handle')
+            ->with($context)
+        ;
 
         $sender = new MailSender($adapter, $serializer, $configuration);
         $sender->nextNode($nextChainNode);
         
-        $sender->handle($exception, $data);
+        $sender->handle($context);
     }
 
     /**

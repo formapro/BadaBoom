@@ -1,21 +1,18 @@
 <?php
-
 namespace BadaBoom\ChainNode;
 
-use BadaBoom\DataHolder\DataHolderInterface;
+use BadaBoom\Context;
 
 interface ChainNodeInterface
 {
     /**
-     *
-     * @param DataHolderInterface
+     * @param Context
      *
      * @return void
      */
-    function handle(\Exception $exception, DataHolderInterface $data);
+    function handle(Context $context);
 
     /**
-     *
      * @param ChainNodeInterface $node
      *
      * @return ChainNodeInterface

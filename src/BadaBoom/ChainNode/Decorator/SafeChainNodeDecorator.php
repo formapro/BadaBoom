@@ -1,9 +1,8 @@
 <?php
 namespace BadaBoom\ChainNode\Decorator;
 
-use BadaBoom\ChainNode\AbstractChainNode;
-use BadaBoom\DataHolder\DataHolderInterface;
 use BadaBoom\ChainNode\ChainNodeInterface;
+use BadaBoom\Context;
 
 class SafeChainNodeDecorator implements ChainNodeInterface
 {
@@ -23,23 +22,19 @@ class SafeChainNodeDecorator implements ChainNodeInterface
     /**
      * {@inheritdoc}
      */
-    public function handle(\Exception $exception, DataHolderInterface $data)
+    public function handle(Context $context)
     {
         try {
-            $this->chainNode->handle($exception, $data);
+            $this->chainNode->handle($context);
         } catch (\Exception $internalException) {
-            $chainExceptions = $data->get('chain_exceptions', array());
+            $chainExceptions = $context->getVar('chain_exceptions', array());
+
             $chainExceptions[] = array(
                 'chain' => get_class($this->chainNode),
-                'class' => get_class($internalException),
-                'message' => $internalException->getMessage(),
-                'code' => $internalException->getCode(),
-                'line' => $internalException->getLine(),
-                'file' => $internalException->getFile(),
-                'has_previous' => $internalException->getPrevious() instanceof \Exception,
+                'exception' => (string) $internalException 
             );
 
-            $data->set('chain_exceptions', $chainExceptions);
+            $context->setVar('chain_exceptions', $chainExceptions);
         }
     }
 

@@ -1,8 +1,7 @@
 <?php
-
 namespace BadaBoom\ChainNode\Provider;
 
-use BadaBoom\DataHolder\DataHolderInterface;
+use BadaBoom\Context;
 
 class ServerProvider extends AbstractProvider
 {
@@ -20,10 +19,10 @@ class ServerProvider extends AbstractProvider
         $this->sectionName = $sectionName;
     }
 
-    public function handle(\Exception $exception, DataHolderInterface $data)
+    public function handle(Context $context)
     {
-        $data->set($this->sectionName, $_SERVER);
+        $context->setVar($this->sectionName, $_SERVER);
 
-        $this->handleNextNode($exception, $data);
+        $this->handleNextNode($context);
     }
 }

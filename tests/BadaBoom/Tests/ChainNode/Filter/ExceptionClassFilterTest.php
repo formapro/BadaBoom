@@ -2,7 +2,7 @@
 namespace BadaBoom\Tests\ChainNode\Filter;
 
 use BadaBoom\ChainNode\Filter\ExceptionClassFilter;
-use BadaBoom\DataHolder\DataHolder;
+use BadaBoom\Context;
 
 class ExceptionClassFilterTest extends \PHPUnit_Framework_TestCase
 {
@@ -105,7 +105,7 @@ class ExceptionClassFilterTest extends \PHPUnit_Framework_TestCase
     {
         $filter = new ExceptionClassFilter();
 
-        $this->assertTrue($filter->shouldContinue(new \Exception, new DataHolder));
+        $this->assertTrue($filter->shouldContinue(new Context(new \Exception)));
     }
 
     /**
@@ -117,7 +117,7 @@ class ExceptionClassFilterTest extends \PHPUnit_Framework_TestCase
 
         $filter->allowAll();
 
-        $this->assertTrue($filter->shouldContinue(new \Exception(), new DataHolder()));
+        $this->assertTrue($filter->shouldContinue(new Context(new \Exception)));
     }
 
     /**
@@ -129,7 +129,7 @@ class ExceptionClassFilterTest extends \PHPUnit_Framework_TestCase
 
         $filter->denyAll();
 
-        $this->assertFalse($filter->shouldContinue(new \Exception(), new DataHolder()));
+        $this->assertFalse($filter->shouldContinue(new Context(new \Exception)));
     }
 
     /**
@@ -148,7 +148,7 @@ class ExceptionClassFilterTest extends \PHPUnit_Framework_TestCase
         $filter->deny('BadFunctionCallException');
 
         //SUT
-        $result = $filter->shouldContinue(new $exceptionClass, new DataHolder());
+        $result = $filter->shouldContinue(new Context(new $exceptionClass));
 
         $this->assertEquals($expectedResult, $result, $failMessage);
     }
@@ -169,7 +169,7 @@ class ExceptionClassFilterTest extends \PHPUnit_Framework_TestCase
         $filter->allow('Exception');
 
         //SUT
-        $result = $filter->shouldContinue(new $exceptionClass, new DataHolder());
+        $result = $filter->shouldContinue(new Context(new $exceptionClass));
 
         $this->assertEquals($expectedResult, $result, $failMessage);
     }
@@ -185,7 +185,7 @@ class ExceptionClassFilterTest extends \PHPUnit_Framework_TestCase
         $filter->deny('Exception');
         $filter->allow('Exception');
 
-        $this->assertTrue($filter->shouldContinue(new \Exception, new DataHolder));
+        $this->assertTrue($filter->shouldContinue(new Context(new \Exception)));
     }
 
     protected function createMockChainNode()
