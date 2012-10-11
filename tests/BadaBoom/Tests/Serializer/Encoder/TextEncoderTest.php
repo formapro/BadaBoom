@@ -145,6 +145,6 @@ class TextEncoderTest extends \PHPUnit_Framework_TestCase
     public function shouldSupportPlainTextEncoding()
     {
         $encoder = new TextEncoder();
-        $this->assertTrue($encoder->supportsEncoding('plain-text'));
+        $this->assertTrue($encoder->supportsEncoding('text'));
     }
 }
