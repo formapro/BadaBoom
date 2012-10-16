@@ -86,10 +86,6 @@ class ContextNormalizer implements NormalizerInterface
      */
     public function supportsNormalization($data, $format = null)
     {
-        if (in_array($format, array('one_line', $strict = true))) {
-            return false;
-        }
-        
         return  $data instanceof Context;
     }
 
