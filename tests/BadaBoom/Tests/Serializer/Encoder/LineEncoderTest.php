@@ -4,7 +4,7 @@ namespace BadaBoom\Tests\Serializer\Encoder;
 use BadaBoom\Serializer\Encoder\LineEncoder;
 use BadaBoom\Context;
 
-class TextEncoderTest extends \PHPUnit_Framework_TestCase
+class LineEncoderTest extends \PHPUnit_Framework_TestCase
 {
     /**
      * @test
