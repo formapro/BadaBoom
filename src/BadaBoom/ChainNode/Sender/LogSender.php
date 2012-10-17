@@ -39,7 +39,7 @@ class LogSender extends AbstractSender
     {
         $this->adapter->log(
             $this->serialize($context),
-            $context->getVar('log_level', $this->configuration->get('log_level', self::INFO))
+            $context->getVar('log_level', $this->options->get('log_level', self::INFO))
         );
         
         $this->handleNextNode($context);

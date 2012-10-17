@@ -41,3 +41,5 @@ composer.phar
 
 #### Vendors ####
 vendor/
+
+bin

@@ -17,11 +17,13 @@
     ],
     "require": {
         "php": ">=5.3.2",
-        "symfony/serializer": ">=2.0.6"
+        "symfony/serializer": ">=2.0.6",
+        "symfony/options-resolver": ">=2.0"
     },
     "require-dev": {
         "swiftmailer/swiftmailer": ">=4.1.0",
-        "fp/fumocker": ">=1.0-dev"
+        "fp/fumocker": "1.0.*",
+        "phpunit/phpunit": "3.7.*"
     },
     "suggest": {
         "ext-newrelic": "In case you want use newrelic.com service."
@@ -30,6 +32,9 @@
         "psr-0": {
           "BadaBoom": "src/"
         }
+    },
+    "config": {
+        "bin-dir": "bin"
     },
     "extra": {
         "branch-alias": {

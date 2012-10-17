@@ -2,6 +2,10 @@
 namespace BadaBoom\ChainNode\Sender;
 
 use Symfony\Component\Serializer\Serializer;
+use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\OptionsResolver\OptionsResolverInterface;
+use Symfony\Component\OptionsResolver\Options;
+use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 
 use BadaBoom\ChainNode\AbstractChainNode;
 use BadaBoom\Adapter\SenderAdapterInterface;
@@ -16,9 +20,9 @@ abstract class AbstractSender extends AbstractChainNode
     protected $serializer;
 
     /**
-     * @var \BadaBoom\DataHolder\DataHolderInterface
+     * @var array
      */
-    protected $configuration;
+    protected $options;
 
     /**
      * @var SenderAdapterInterface
@@ -28,15 +32,31 @@ abstract class AbstractSender extends AbstractChainNode
     /**
      * @param \BadaBoom\Adapter\SenderAdapterInterface $adapter
      * @param \Symfony\Component\Serializer\Serializer $serializer
-     * @param \BadaBoom\DataHolder\DataHolderInterface $configuration
+     * @param array $options
      */
-    public function __construct(SenderAdapterInterface $adapter, Serializer $serializer, DataHolderInterface $configuration)
+    public function __construct(SenderAdapterInterface $adapter, Serializer $serializer, array $options)
     {
-        $this->validateFormat($configuration->get('format'), $serializer);
-
         $this->serializer = $serializer;
-        $this->configuration = $configuration;
         $this->adapter = $adapter;
+        
+        $this->options = $this->getOptionResolver()->resolve($options);
+    }
+
+    /**
+     * @return OptionsResolver
+     */
+    protected function getOptionResolver()
+    {   
+        $resolver = new OptionsResolver();
+        $resolver->setRequired(array(
+            'format'
+        ));
+        
+        $resolver->setNormalizers(array(
+            'format' => $this->getFormatNormalizer(),
+        ));
+        
+        return $resolver;
     }
 
     /**
@@ -46,28 +66,25 @@ abstract class AbstractSender extends AbstractChainNode
      */
     public function serialize(Context $context)
     {
-        return $this->serializer->serialize($context, $this->configuration->get('format'));
+        return $this->serializer->serialize($context, $this->options['format']);
     }
 
-    /**
-     * @throws \InvalidArgumentException
-     *
-     * @param string $format
-     * @param \Symfony\Component\Serializer\Serializer $serializer
-     * 
-     * @return void
+    /** 
+     * @return Closure
      */
-    protected function validateFormat($format, Serializer $serializer)
+    protected function getFormatNormalizer()
     {
-        if(false == $format) {
-            throw new \InvalidArgumentException('Mandatory field "format" is missing in the given configuration');
-        }
+        $serializer = $this->serializer;
+        
+        return function(Options $options, $value) use ($serializer) {
+            if (false == $serializer->supportsEncoding($value)) {
+                throw new InvalidOptionsException(sprintf(
+                    'Given format "%s" is not supported by serializer',
+                    $value
+                ));
+            }
 
-        if (false == $serializer->supportsEncoding($format)) {
-            throw new \InvalidArgumentException(sprintf(
-                'Given format "%s" is not supported by serializer',
-                $format
-            ));
-        }
+            return $value;
+        };
     }
 }

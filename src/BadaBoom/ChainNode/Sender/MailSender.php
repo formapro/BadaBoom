@@ -31,11 +31,11 @@ class MailSender extends AbstractSender
     public function handle(Context $context)
     {
         $this->adapter->send(
-            $this->configuration->get('sender'),
-            $this->configuration->get('recipients'),
-            $context->getVar('subject', $this->configuration->get('subject')),
+            $this->options->get('sender'),
+            $this->options->get('recipients'),
+            $context->getVar('subject', $this->options->get('subject')),
             $this->serialize($context),
-            $this->configuration->get('headers', array())
+            $this->options->get('headers', array())
         );
 
         $this->handleNextNode($context);
