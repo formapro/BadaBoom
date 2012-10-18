@@ -4,7 +4,6 @@ namespace BadaBoom\Tests\ChainNode\Sender;
 use Symfony\Component\Serializer\Serializer;
 
 use BadaBoom\ChainNode\Sender\LogSender;
-use BadaBoom\DataHolder\DataHolder;
 use BadaBoom\Context;
 
 class LogSenderTestCase extends \PHPUnit_Framework_TestCase
@@ -33,10 +32,33 @@ class LogSenderTestCase extends \PHPUnit_Framework_TestCase
             'Symfony\Component\Serializer\SerializerInterface',
             $parameters[1]->getClass()->getName()
         );
-        $this->assertEquals(
-            'BadaBoom\DataHolder\DataHolderInterface',
-            $parameters[2]->getClass()->getName()
+        
+        $this->assertEquals('options', $parameters[2]->getName());
+    }
+
+    /**
+     * @test
+     * 
+     * @expectedException Symfony\Component\OptionsResolver\Exception\InvalidOptionsException
+     * @expectedExceptionMessage Given log_level "not-supported-log-level" is not supported.
+     */
+    public function throwIfNotSupportedLogLevelGiven()
+    {
+        $options = array(
+            'format' => 'json',
+            'log_level' => 'not-supported-log-level'
         );
+
+        $adapter = $this->getMock('BadaBoom\Adapter\Logger\LoggerAdapterInterface');
+        $encoder = $this->getMock('Symfony\Component\Serializer\Encoder\EncoderInterface');
+        $encoder->expects($this->once())
+            ->method('supportsEncoding')
+            ->with($options['format'])
+            ->will($this->returnValue(true))
+        ;
+        $serializer = new Serializer(array(), array($options['format'] => $encoder));
+
+        new LogSender($adapter, $serializer, $options);
     }
 
     /**
@@ -44,29 +66,30 @@ class LogSenderTestCase extends \PHPUnit_Framework_TestCase
      */
     public function shouldLogDataWithLevelGivenByContext()
     {
-        $configuration = new DataHolder();
-        $configuration->set('format', 'json');
-        $configuration->set('log_level', LogSender::ALERT);
+        $options = array(
+            'format' => 'json',
+            'log_level' => LogSender::ALERT
+        );
 
         $context = new Context(new \Exception);
         $context->setVar('log_level', LogSender::CRITICAL);
         $serializedData = 'Hey! Log me.';
 
         //guard
-        $this->assertNotEquals($configuration->get('log_level'), $context->getVar('log_level'));
+        $this->assertNotEquals($options['log_level'], $context->getVar('log_level'));
 
         $encoder = $this->getMock('Symfony\Component\Serializer\Encoder\EncoderInterface');
         $encoder->expects($this->once())
             ->method('supportsEncoding')
-            ->with($configuration->get('format'))
+            ->with($options['format'])
             ->will($this->returnValue(true))
         ;
         $encoder->expects($this->once())
             ->method('encode')
-            ->with(array('log_level' => LogSender::CRITICAL), $configuration->get('format'))
+            ->with(array('log_level' => LogSender::CRITICAL), $options['format'])
             ->will($this->returnValue($serializedData))
         ;
-        $serializer = new Serializer(array(), array($configuration->get('format') => $encoder));
+        $serializer = new Serializer(array(), array($options['format'] => $encoder));
 
         $adapter = $this->getMock('BadaBoom\Adapter\Logger\LoggerAdapterInterface');
         $adapter->expects($this->once())
@@ -74,7 +97,7 @@ class LogSenderTestCase extends \PHPUnit_Framework_TestCase
             ->with($serializedData, $context->getVar('log_level'))
         ;
 
-        $sender = new LogSender($adapter, $serializer, $configuration);
+        $sender = new LogSender($adapter, $serializer, $options);
         $sender->handle($context);
     }
 
@@ -83,9 +106,10 @@ class LogSenderTestCase extends \PHPUnit_Framework_TestCase
      */
     public function shouldLogDataWithLevelGivenByConfiguration()
     {
-        $configuration = new DataHolder();
-        $configuration->set('log_level', LogSender::CRITICAL);
-        $configuration->set('format', 'json');
+        $options = array(
+            'format' => 'json',
+            'log_level' => LogSender::CRITICAL
+        );
 
         $context = new Context(new \Exception);
         $serializedData = 'Hey! Log me.';
@@ -94,18 +118,18 @@ class LogSenderTestCase extends \PHPUnit_Framework_TestCase
         $encoder->expects($this->once())->method('supportsEncoding')->will($this->returnValue(true));
         $encoder->expects($this->once())
             ->method('encode')
-            ->with(array(), $configuration->get('format'))
+            ->with(array(), $options['format'])
             ->will($this->returnValue($serializedData))
         ;
-        $serializer = new Serializer(array(), array($configuration->get('format') => $encoder));
+        $serializer = new Serializer(array(), array($options['format'] => $encoder));
 
         $adapter = $this->getMock('BadaBoom\Adapter\Logger\LoggerAdapterInterface');
         $adapter->expects($this->once())
             ->method('log')
-            ->with($serializedData, $configuration->get('log_level'))
+            ->with($serializedData, $options['log_level'])
         ;
 
-        $sender = new LogSender($adapter, $serializer, $configuration);
+        $sender = new LogSender($adapter, $serializer, $options);
         $sender->handle($context);
     }
 
@@ -114,8 +138,9 @@ class LogSenderTestCase extends \PHPUnit_Framework_TestCase
      */
     public function shouldLogDataWithDefaultLevel()
     {
-        $configuration = new DataHolder();
-        $configuration->set('format', 'json');
+        $options = array(
+            'format' => 'json',
+        );
 
         $context = new Context(new \Exception);
         $serializedData = 'Hey! Log me.';
@@ -124,10 +149,10 @@ class LogSenderTestCase extends \PHPUnit_Framework_TestCase
         $encoder->expects($this->once())->method('supportsEncoding')->will($this->returnValue(true));
         $encoder->expects($this->once())
             ->method('encode')
-            ->with(array(), $configuration->get('format'))
+            ->with(array(), $options['format'])
             ->will($this->returnValue($serializedData))
         ;
-        $serializer = new Serializer(array(), array($configuration->get('format') => $encoder));
+        $serializer = new Serializer(array(), array($options['format'] => $encoder));
 
         $adapter = $this->getMock('BadaBoom\Adapter\Logger\LoggerAdapterInterface');
         $adapter->expects($this->once())
@@ -135,7 +160,7 @@ class LogSenderTestCase extends \PHPUnit_Framework_TestCase
             ->with($serializedData, LogSender::INFO)
         ;
 
-        $sender = new LogSender($adapter, $serializer, $configuration);
+        $sender = new LogSender($adapter, $serializer, $options);
         $sender->handle($context);
     }
 

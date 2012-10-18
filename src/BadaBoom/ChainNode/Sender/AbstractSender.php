@@ -3,13 +3,11 @@ namespace BadaBoom\ChainNode\Sender;
 
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\OptionsResolver\OptionsResolverInterface;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 
 use BadaBoom\ChainNode\AbstractChainNode;
 use BadaBoom\Adapter\SenderAdapterInterface;
-use BadaBoom\DataHolder\DataHolderInterface;
 use BadaBoom\Context;
 
 abstract class AbstractSender extends AbstractChainNode
@@ -20,14 +18,14 @@ abstract class AbstractSender extends AbstractChainNode
     protected $serializer;
 
     /**
-     * @var array
-     */
-    protected $options;
-
-    /**
      * @var SenderAdapterInterface
      */
     protected $adapter;
+
+    /**
+     * @var array
+     */
+    protected $options;
 
     /**
      * @param \BadaBoom\Adapter\SenderAdapterInterface $adapter
@@ -60,8 +58,8 @@ abstract class AbstractSender extends AbstractChainNode
     }
 
     /**
-     *
-     * @param DataHolderInterface $data
+     * @param Context $context
+     * 
      * @return void
      */
     public function serialize(Context $context)
@@ -70,7 +68,7 @@ abstract class AbstractSender extends AbstractChainNode
     }
 
     /** 
-     * @return Closure
+     * @return \Closure
      */
     protected function getFormatNormalizer()
     {
@@ -78,10 +76,7 @@ abstract class AbstractSender extends AbstractChainNode
         
         return function(Options $options, $value) use ($serializer) {
             if (false == $serializer->supportsEncoding($value)) {
-                throw new InvalidOptionsException(sprintf(
-                    'Given format "%s" is not supported by serializer',
-                    $value
-                ));
+                throw new InvalidOptionsException(sprintf('Given format "%s" is not supported by serializer.', $value));
             }
 
             return $value;
