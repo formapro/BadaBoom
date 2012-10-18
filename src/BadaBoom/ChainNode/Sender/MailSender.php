@@ -27,7 +27,7 @@ class MailSender extends AbstractSender
         $resolver = parent::getOptionResolver();
         
         $resolver->setDefaults(array(
-            'subject' => 'An error occurred.',
+            'subject' => null,
             'headers' => array(),
         ));
         

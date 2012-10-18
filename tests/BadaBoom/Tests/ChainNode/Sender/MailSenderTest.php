@@ -113,191 +113,185 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
 
         new MailSender($this->createMockAdapter(), $this->createSerializerStub(), $options);
     }
-//
-//    /**
-//     * @test
-//     */
-//    public function shouldSendSerializedContentAccordingGivenConfiguration()
-//    {
-//        $context = new Context(new \Exception);
-//        $serializedData = 'Plain text';
-//        $configuration = $this->getFullConfiguration();
-//
-//        $encoder = $this->getMock('Symfony\Component\Serializer\Encoder\EncoderInterface');
-//        $encoder->expects($this->once())
-//            ->method('supportsEncoding')
-//            ->with($configuration->get('format'))
-//            ->will($this->returnValue(true))
-//        ;
-//        $encoder->expects($this->once())
-//            ->method('encode')
-//            ->with(array(), $configuration->get('format'))
-//            ->will($this->returnValue($serializedData))
-//        ;
-//        $serializer = new Serializer(array(), array($configuration->get('format') => $encoder));
-//
-//        $adapter = $this->createMockAdapter();
-//        $adapter->expects($this->once())
-//            ->method('send')
-//            ->with(
-//                $configuration->get('sender'),
-//                $configuration->get('recipients'),
-//                $configuration->get('subject'),
-//                $serializedData,
-//                $configuration->get('headers')
-//            )
-//        ;
-//        $sender = new MailSender($adapter, $serializer, $configuration);
-//
-//        $sender->handle($context);
-//    }
-//
-//    /**
-//     * @test
-//     */
-//    public function shouldTakeSubjectFromHandledDataInsteadOfConfigurationValue()
-//    {
-//        $context = new Context(new \Exception);
-//        $context->setVar('subject', 'Hey! There is an error.');
-//
-//        $configuration = new DataHolder();
-//        $configuration->set('format', 'html');
-//        $configuration->set('sender', 'valid@sender.com');
-//        $configuration->set('recipients', array('john@doe.com'));
-//        $configuration->set('subject', 'Static subject from config');
-//
-//        $encoder = $this->getMock('Symfony\Component\Serializer\Encoder\EncoderInterface');
-//        $encoder->expects($this->any())->method('supportsEncoding')->will($this->returnValue(true));
-//        $encoder->expects($this->any())->method('encode');
-//        $serializer = new Serializer(array(), array($configuration->get('format') => $encoder));
-//
-//        $adapter = $this->createMockAdapter();
-//        $adapter->expects($this->once())
-//            ->method('send')
-//            ->with(
-//                $configuration->get('sender'),
-//                $configuration->get('recipients'),
-//                $context->getVar('subject'),
-//                null,
-//                array()
-//            )
-//        ;
-//
-//        $sender = new MailSender($adapter, $serializer, $configuration);
-//        $sender->handle($context);
-//    }
-//
-//    /**
-//     * @test
-//     */
-//    public function shouldSendEmptySubjectIfItWasNotSetBefore()
-//    {
-//        $emptySubject = null;
-//        $context = new Context(new \Exception);
-//
-//        $configuration = new DataHolder();
-//        $configuration->set('format', 'html');
-//        $configuration->set('sender', 'valid@sender.com');
-//        $configuration->set('recipients', array('john@doe.com'));
-//        $configuration->set('headers', array('BB' => 'support@site.com'));
-//
-//        $encoder = $this->getMock('Symfony\Component\Serializer\Encoder\EncoderInterface');
-//        $encoder->expects($this->any())->method('supportsEncoding')->will($this->returnValue(true));
-//        $encoder->expects($this->any())->method('encode');
-//        $serializer = new Serializer(array(), array($configuration->get('format') => $encoder));
-//
-//        $adapter = $this->createMockAdapter();
-//        $adapter->expects($this->once())
-//            ->method('send')
-//            ->with(
-//                $configuration->get('sender'),
-//                $configuration->get('recipients'),
-//                $emptySubject,
-//                null,
-//                $configuration->get('headers')
-//            )
-//        ;
-//
-//        $sender = new MailSender($adapter, $serializer, $configuration);
-//        $sender->handle($context);
-//    }
-//
-//    /**
-//     * @test
-//     */
-//    public function shouldSendEmptyHeadersListIfItWasNotSetBefore()
-//    {
-//        $emptyHeaderList = array();
-//        $context = new Context(new \Exception);
-//
-//        $configuration = new DataHolder();
-//        $configuration->set('format', 'html');
-//        $configuration->set('sender', 'valid@sender.com');
-//        $configuration->set('recipients', array('john@doe.com'));
-//
-//        $encoder = $this->getMock('Symfony\Component\Serializer\Encoder\EncoderInterface');
-//        $encoder->expects($this->any())->method('supportsEncoding')->will($this->returnValue(true));
-//        $encoder->expects($this->any())->method('encode');
-//        $serializer = new Serializer(array(), array($configuration->get('format') => $encoder));
-//
-//        $adapter = $this->createMockAdapter();
-//        $adapter->expects($this->once())
-//            ->method('send')
-//            ->with(
-//                $configuration->get('sender'),
-//                $configuration->get('recipients'),
-//                null,
-//                null,
-//                $emptyHeaderList
-//            )
-//        ;
-//
-//        $sender = new MailSender($adapter, $serializer, $configuration);
-//        $sender->handle($context);
-//    }
-//
-//    /**
-//     * @test
-//     */
-//    public function shouldSendMailAndDelegateHandlingToNextChainNode()
-//    {
-//        $context = new Context(new \Exception);
-//        $configuration = $this->getFullConfiguration();
-//
-//        $encoder = $this->getMock('Symfony\Component\Serializer\Encoder\EncoderInterface');
-//        $encoder->expects($this->any())->method('supportsEncoding')->will($this->returnValue(true));
-//        $encoder->expects($this->any())->method('encode');
-//        $serializer = new Serializer(array(), array($configuration->get('format') => $encoder));
-//
-//        $adapter = $this->createMockAdapter();
-//        $adapter->expects($this->any())->method('send');
-//
-//        $nextChainNode = $this->createMockChainNode();
-//        $nextChainNode
-//            ->expects($this->once())
-//            ->method('handle')
-//            ->with($context)
-//        ;
-//
-//        $sender = new MailSender($adapter, $serializer, $configuration);
-//        $sender->nextNode($nextChainNode);
-//        
-//        $sender->handle($context);
-//    }
 
     /**
-     * @return \BadaBoom\DataHolder\DataHolder
+     * @test
      */
-    protected function getFullConfiguration()
+    public function shouldSendSerializedContentAccordingGivenOptions()
     {
-        $configuration = new DataHolder();
-        $configuration->set('format', 'html');
-        $configuration->set('sender', 'valid@sender.com');
-        $configuration->set('subject', 'It should be provided via SubjectProvider');
-        $configuration->set('recipients', array('john@doe.com'));
-        $configuration->set('headers', array('BB' => 'support@site.com'));
+        $context = new Context(new \Exception);
+        $serializedData = 'Plain text';
+        $options = $this->getAllPossibleOptions();
 
-        return $configuration;
+        $encoder = $this->getMock('Symfony\Component\Serializer\Encoder\EncoderInterface');
+        $encoder->expects($this->once())
+            ->method('supportsEncoding')
+            ->with($options['format'])
+            ->will($this->returnValue(true))
+        ;
+        $encoder->expects($this->once())
+            ->method('encode')
+            ->with(array(), $options['format'])
+            ->will($this->returnValue($serializedData))
+        ;
+        $serializer = new Serializer(array(), array($options['format'] => $encoder));
+
+        $adapter = $this->createMockAdapter();
+        $adapter->expects($this->once())
+            ->method('send')
+            ->with(
+                $options['sender'],
+                $options['recipients'],
+                $options['subject'],
+                $serializedData,
+                $options['headers']
+            )
+        ;
+        $sender = new MailSender($adapter, $serializer, $options);
+
+        $sender->handle($context);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldTakeSubjectFromHandledDataInsteadOfConfigurationValue()
+    {
+        $context = new Context(new \Exception);
+        $context->setVar('subject', 'Hey! There is an error.');
+
+        $options = $this->getAllPossibleOptions();
+        $options['subject'] = 'Static subject from config';
+        $options['headers'] = array();
+
+        $encoder = $this->getMock('Symfony\Component\Serializer\Encoder\EncoderInterface');
+        $encoder->expects($this->any())->method('supportsEncoding')->will($this->returnValue(true));
+        $encoder->expects($this->any())->method('encode');
+        $serializer = new Serializer(array(), array($options['format'] => $encoder));
+
+        $adapter = $this->createMockAdapter();
+        $adapter->expects($this->once())
+            ->method('send')
+            ->with(
+                $options['sender'],
+                $options['recipients'],
+                $context->getVar('subject'),
+                null,
+                array()
+            )
+        ;
+
+        $sender = new MailSender($adapter, $serializer, $options);
+        $sender->handle($context);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldSendEmptySubjectIfItWasNotSetBefore()
+    {
+        $emptySubject = null;
+        $context = new Context(new \Exception);
+
+        $options = $this->getAllPossibleOptions();
+        unset($options['subject']);
+
+        $encoder = $this->getMock('Symfony\Component\Serializer\Encoder\EncoderInterface');
+        $encoder->expects($this->any())->method('supportsEncoding')->will($this->returnValue(true));
+        $encoder->expects($this->any())->method('encode');
+        $serializer = new Serializer(array(), array($options['format'] => $encoder));
+
+        $adapter = $this->createMockAdapter();
+        $adapter->expects($this->once())
+            ->method('send')
+            ->with(
+                $options['sender'],
+                $options['recipients'],
+                $emptySubject,
+                null,
+                $options['headers']
+            )
+        ;
+
+        $sender = new MailSender($adapter, $serializer, $options);
+        $sender->handle($context);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldSendEmptyHeadersListIfItWasNotSetBefore()
+    {
+        $emptyHeaderList = array();
+        $context = new Context(new \Exception);
+
+        $options = $this->getAllPossibleOptions();
+        unset($options['headers']);
+        unset($options['subject']);
+
+        $encoder = $this->getMock('Symfony\Component\Serializer\Encoder\EncoderInterface');
+        $encoder->expects($this->any())->method('supportsEncoding')->will($this->returnValue(true));
+        $encoder->expects($this->any())->method('encode');
+        $serializer = new Serializer(array(), array($options['format'] => $encoder));
+
+        $adapter = $this->createMockAdapter();
+        $adapter->expects($this->once())
+            ->method('send')
+            ->with(
+                $options['sender'],
+                $options['recipients'],
+                null,
+                null,
+                $emptyHeaderList
+            )
+        ;
+
+        $sender = new MailSender($adapter, $serializer, $options);
+        $sender->handle($context);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldSendMailAndDelegateHandlingToNextChainNode()
+    {
+        $context = new Context(new \Exception);
+        
+        $options = $this->getAllPossibleOptions();
+
+        $encoder = $this->getMock('Symfony\Component\Serializer\Encoder\EncoderInterface');
+        $encoder->expects($this->any())->method('supportsEncoding')->will($this->returnValue(true));
+        $encoder->expects($this->any())->method('encode');
+        $serializer = new Serializer(array(), array($options['format'] => $encoder));
+
+        $adapter = $this->createMockAdapter();
+        $adapter->expects($this->any())->method('send');
+
+        $nextChainNode = $this->createMockChainNode();
+        $nextChainNode
+            ->expects($this->once())
+            ->method('handle')
+            ->with($context)
+        ;
+
+        $sender = new MailSender($adapter, $serializer, $options);
+        $sender->nextNode($nextChainNode);
+        
+        $sender->handle($context);
+    }
+
+    /**
+     * @return array
+     */
+    protected function getAllPossibleOptions()
+    {
+        return array(
+            'format' => 'html',
+            'sender' => 'valid@sender.com',
+            'subject' => 'It should be provided via SubjectProvider',
+            'recipients' => array('john@doe.com'),
+            'headers' => array('BB' => 'support@site.com'),
+        );
     }
 
     /**
