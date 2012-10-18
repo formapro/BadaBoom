@@ -1,7 +1,6 @@
 <?php
 namespace BadaBoom\Tests\ChainNode\Sender;
 
-use BadaBoom\DataHolder\DataHolder;
 use BadaBoom\Context;
 
 use Symfony\Component\Serializer\Serializer;

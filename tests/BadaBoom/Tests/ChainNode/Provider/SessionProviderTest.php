@@ -47,7 +47,7 @@ class SessionProviderTest extends \PHPUnit_Framework_TestCase
     /**
      * @test
      */
-    public function shouldFillDataHolderWithEmptyArrayIfGlobalSessionArrayNotDefinied()
+    public function shouldFillContextWithEmptyArrayIfGlobalSessionArrayNotDefinied()
     {
         unset($_SESSION);
 
@@ -62,7 +62,7 @@ class SessionProviderTest extends \PHPUnit_Framework_TestCase
     /**
      * @test
      */
-    public function shouldFillDataHolderWithGlobalSessionArray()
+    public function shouldFillContextWithGlobalSessionArray()
     {
         $_SESSION = array();
         $_SESSION['foo'] = 'foo';

@@ -54,7 +54,7 @@ class ExceptionSummaryProviderTest extends \PHPUnit_Framework_TestCase
      *
      * @test
      */
-    public function shouldFillDataHolderWithExceptionInfo()
+    public function shouldFillContextWithExceptionInfo()
     {
         $context = new Context(new \Exception('foo', 123));
 
