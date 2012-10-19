@@ -1,11 +1,12 @@
 <?php
 namespace BadaBoom\ChainNode\Sender;
 
-use BadaBoom\Adapter\Logger\LoggerAdapterInterface;
-use BadaBoom\DataHolder\DataHolderInterface;
-use BadaBoom\Context;
-
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\OptionsResolver\Options;
+use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
+
+use BadaBoom\Adapter\Logger\LoggerAdapterInterface;
+use BadaBoom\Context;
 
 class LogSender extends AbstractSender
 {
@@ -25,11 +26,26 @@ class LogSender extends AbstractSender
     /**
      * @param \BadaBoom\Adapter\Logger\LoggerAdapterInterface $adapter
      * @param \Symfony\Component\Serializer\SerializerInterface $serializer
-     * @param \BadaBoom\DataHolder\DataHolderInterface $configuration
+     * @param array $options
      */
-    public function __construct(LoggerAdapterInterface $adapter, SerializerInterface $serializer, DataHolderInterface $configuration)
+    public function __construct(LoggerAdapterInterface $adapter, SerializerInterface $serializer, array $options)
     {
-        parent::__construct($adapter, $serializer, $configuration);
+        parent::__construct($adapter, $serializer, $options);
+    }
+    
+    protected function getOptionResolver()
+    {
+        $resolver = parent::getOptionResolver();
+        
+        $resolver->setDefaults(array(
+            'log_level' => self::INFO
+        ));
+        
+        $resolver->setNormalizers(array(
+            'log_level' => $this->getLogLevelNormalizer()
+        ));
+        
+        return $resolver;
     }
 
     /**
@@ -39,9 +55,26 @@ class LogSender extends AbstractSender
     {
         $this->adapter->log(
             $this->serialize($context),
-            $context->getVar('log_level', $this->configuration->get('log_level', self::INFO))
+            $context->getVar('log_level', $this->options['log_level'])
         );
         
         $this->handleNextNode($context);
+    }
+
+    /**
+     * @return \Closure
+     */
+    protected function getLogLevelNormalizer()
+    {
+        $ro = new \ReflectionObject($this);
+        $supportedLevels = $ro->getConstants();
+
+        return function(Options $options, $value) use ($supportedLevels) {
+            if (false == in_array($value, $supportedLevels, $strict = true)) {
+                throw new InvalidOptionsException(sprintf('Given log_level "%s" is not supported.', $value));
+            }
+
+            return $value;
+        };
     }
 }

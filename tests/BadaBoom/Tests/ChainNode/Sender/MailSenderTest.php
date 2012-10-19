@@ -2,13 +2,14 @@
 namespace BadaBoom\Tests\ChainNode\Sender;
 
 use BadaBoom\ChainNode\Sender\MailSender;
-use BadaBoom\DataHolder\DataHolder;
 use BadaBoom\Context;
 
 use Symfony\Component\Serializer\Serializer;
 
 class MailSenderTest extends \PHPUnit_Framework_TestCase
 {
+    protected $serializerStub;
+    
     /**
      * @test
      */
@@ -21,39 +22,42 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
     /**
      * @test
      *
-     * @expectedException \InvalidArgumentException
+     * @expectedException \Symfony\Component\OptionsResolver\Exception\InvalidOptionsException
      * @expectedExceptionMessage Given sender
      *
      * @dataProvider provideInvalidMail
      */
     public function throwWhenConstructWithIncorrectSender($invalidSender)
     {
-        $configuration = new DataHolder();
-        $configuration->set('sender', $invalidSender);
+        $options = array(
+            'format' => 'supported',
+            'sender' => $invalidSender,
+            'recipients' => 'foo@example.com',
+        );
 
-        new MailSender($this->createMockAdapter(), $this->createMockSerializer(), $configuration);
+        new MailSender($this->createMockAdapter(), $this->createSerializerStub(), $options);
     }
 
     /**
-     *
      * @test
      *
      * @depends throwWhenConstructWithIncorrectSender
      *
-     * @expectedException \InvalidArgumentException
+     * @expectedException \Symfony\Component\OptionsResolver\Exception\InvalidOptionsException
      * @expectedExceptionMessage Recipients list should not be empty
      */
     public function throwWhenConstructWithEmptyRecipientsList()
     {
-        $configuration = new DataHolder();
-        $configuration->set('sender', 'valid@sender.com');
-        $configuration->set('recipients', array());
+        $options = array(
+            'format' => 'supported',
+            'sender' => 'valid@sender.com',
+            'recipients' => array()
+        );
 
-        new MailSender($this->createMockAdapter(), $this->createMockSerializer(), $configuration);
+        new MailSender($this->createMockAdapter(), $this->createSerializerStub(), $options);
     }
 
     /**
-     *
      * @test
      *
      * @depends throwWhenConstructWithEmptyRecipientsList
@@ -65,15 +69,16 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
      */
     public function throwWhenConstructWithIncorrectRecipientsList($invalidRecipient)
     {
-        $configuration = new DataHolder();
-        $configuration->set('sender', 'valid@sender.com');
-        $configuration->set('recipients', array($invalidRecipient));
+        $options = array(
+            'format' => 'supported',
+            'sender' => 'valid@sender.com',
+            'recipients' => array($invalidRecipient)
+        );
 
-        new MailSender($this->createMockAdapter(), $this->createMockSerializer(), $configuration);
+        new MailSender($this->createMockAdapter(), $this->createSerializerStub(), $options);
     }
 
     /**
-     *
      * @test
      * 
      * @depends throwWhenConstructWithIncorrectRecipientsList
@@ -85,71 +90,63 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
      */
     public function throwWhenConstructWithAnyNumberOfIncorrectRecipients($invalidRecipient)
     {
-        $configuration = new DataHolder();
-        $configuration->set('sender', 'valid@sender.com');
-        $configuration->set('recipients', array('valid@recipient.com', $invalidRecipient, 'another_valid@recipient.com'));
+        $options = array(
+            'format' => 'supported',
+            'sender' => 'valid@sender.com',
+            'recipients' => array('valid@recipient.com', $invalidRecipient, 'another_valid@recipient.com')
+        );
 
-        new MailSender($this->createMockAdapter(), $this->createMockSerializer(), $configuration);
+        new MailSender($this->createMockAdapter(), $this->createSerializerStub(), $options);
     }
 
     /**
      * @test
      */
-    public function shouldValidateSenderAndRecipientsAndFormatInConstruct()
+    public function shouldPassValidationOfSenderAndRecipientsAndFormatInConstruct()
     {
-        $sender = 'valid@recipient.com';
-        $recipient = array('john@doe.com');
-        $format = 'html';
+        $options = array(
+            'format' => 'supported',
+            'sender' => 'valid@sender.com',
+            'recipients' => array('valid@recipient.com')
+        );
 
-        $serializer = $this->createMockSerializer();
-        $serializer->expects($this->once())
-            ->method('supportsEncoding')
-            ->with($format)
-            ->will($this->returnValue(true))
-        ;
-
-        $configuration = new DataHolder();
-        $configuration->set('format', $format);
-        $configuration->set('sender', $sender);
-        $configuration->set('recipients', $recipient);
-
-        new MailSender($this->createMockAdapter(), $serializer, $configuration);
+        new MailSender($this->createMockAdapter(), $this->createSerializerStub(), $options);
     }
 
     /**
      * @test
      */
-    public function shouldSendSerializedContentAccordingGivenConfiguration()
+    public function shouldSendSerializedContentAccordingGivenOptions()
     {
         $context = new Context(new \Exception);
         $serializedData = 'Plain text';
-        $configuration = $this->getFullConfiguration();
+        $options = $this->getAllPossibleOptions();
 
         $encoder = $this->getMock('Symfony\Component\Serializer\Encoder\EncoderInterface');
         $encoder->expects($this->once())
             ->method('supportsEncoding')
-            ->with($configuration->get('format'))
+            ->with($options['format'])
             ->will($this->returnValue(true))
         ;
         $encoder->expects($this->once())
             ->method('encode')
-            ->with(array(), $configuration->get('format'))
+            ->with(array(), $options['format'])
             ->will($this->returnValue($serializedData))
         ;
-        $serializer = new Serializer(array(), array($configuration->get('format') => $encoder));
+        $serializer = new Serializer(array(), array($options['format'] => $encoder));
 
         $adapter = $this->createMockAdapter();
         $adapter->expects($this->once())
             ->method('send')
             ->with(
-                $configuration->get('sender'),
-                $configuration->get('recipients'),
-                $configuration->get('subject'),
+                $options['sender'],
+                $options['recipients'],
+                $options['subject'],
                 $serializedData,
-                $configuration->get('headers')
+                $options['headers']
             )
         ;
-        $sender = new MailSender($adapter, $serializer, $configuration);
+        $sender = new MailSender($adapter, $serializer, $options);
 
         $sender->handle($context);
     }
@@ -162,30 +159,28 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
         $context = new Context(new \Exception);
         $context->setVar('subject', 'Hey! There is an error.');
 
-        $configuration = new DataHolder();
-        $configuration->set('format', 'html');
-        $configuration->set('sender', 'valid@sender.com');
-        $configuration->set('recipients', array('john@doe.com'));
-        $configuration->set('subject', 'Static subject from config');
+        $options = $this->getAllPossibleOptions();
+        $options['subject'] = 'Static subject from config';
+        $options['headers'] = array();
 
         $encoder = $this->getMock('Symfony\Component\Serializer\Encoder\EncoderInterface');
         $encoder->expects($this->any())->method('supportsEncoding')->will($this->returnValue(true));
         $encoder->expects($this->any())->method('encode');
-        $serializer = new Serializer(array(), array($configuration->get('format') => $encoder));
+        $serializer = new Serializer(array(), array($options['format'] => $encoder));
 
         $adapter = $this->createMockAdapter();
         $adapter->expects($this->once())
             ->method('send')
             ->with(
-                $configuration->get('sender'),
-                $configuration->get('recipients'),
+                $options['sender'],
+                $options['recipients'],
                 $context->getVar('subject'),
                 null,
                 array()
             )
         ;
 
-        $sender = new MailSender($adapter, $serializer, $configuration);
+        $sender = new MailSender($adapter, $serializer, $options);
         $sender->handle($context);
     }
 
@@ -197,30 +192,27 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
         $emptySubject = null;
         $context = new Context(new \Exception);
 
-        $configuration = new DataHolder();
-        $configuration->set('format', 'html');
-        $configuration->set('sender', 'valid@sender.com');
-        $configuration->set('recipients', array('john@doe.com'));
-        $configuration->set('headers', array('BB' => 'support@site.com'));
+        $options = $this->getAllPossibleOptions();
+        unset($options['subject']);
 
         $encoder = $this->getMock('Symfony\Component\Serializer\Encoder\EncoderInterface');
         $encoder->expects($this->any())->method('supportsEncoding')->will($this->returnValue(true));
         $encoder->expects($this->any())->method('encode');
-        $serializer = new Serializer(array(), array($configuration->get('format') => $encoder));
+        $serializer = new Serializer(array(), array($options['format'] => $encoder));
 
         $adapter = $this->createMockAdapter();
         $adapter->expects($this->once())
             ->method('send')
             ->with(
-                $configuration->get('sender'),
-                $configuration->get('recipients'),
+                $options['sender'],
+                $options['recipients'],
                 $emptySubject,
                 null,
-                $configuration->get('headers')
+                $options['headers']
             )
         ;
 
-        $sender = new MailSender($adapter, $serializer, $configuration);
+        $sender = new MailSender($adapter, $serializer, $options);
         $sender->handle($context);
     }
 
@@ -232,29 +224,28 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
         $emptyHeaderList = array();
         $context = new Context(new \Exception);
 
-        $configuration = new DataHolder();
-        $configuration->set('format', 'html');
-        $configuration->set('sender', 'valid@sender.com');
-        $configuration->set('recipients', array('john@doe.com'));
+        $options = $this->getAllPossibleOptions();
+        unset($options['headers']);
+        unset($options['subject']);
 
         $encoder = $this->getMock('Symfony\Component\Serializer\Encoder\EncoderInterface');
         $encoder->expects($this->any())->method('supportsEncoding')->will($this->returnValue(true));
         $encoder->expects($this->any())->method('encode');
-        $serializer = new Serializer(array(), array($configuration->get('format') => $encoder));
+        $serializer = new Serializer(array(), array($options['format'] => $encoder));
 
         $adapter = $this->createMockAdapter();
         $adapter->expects($this->once())
             ->method('send')
             ->with(
-                $configuration->get('sender'),
-                $configuration->get('recipients'),
+                $options['sender'],
+                $options['recipients'],
                 null,
                 null,
                 $emptyHeaderList
             )
         ;
 
-        $sender = new MailSender($adapter, $serializer, $configuration);
+        $sender = new MailSender($adapter, $serializer, $options);
         $sender->handle($context);
     }
 
@@ -264,12 +255,13 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
     public function shouldSendMailAndDelegateHandlingToNextChainNode()
     {
         $context = new Context(new \Exception);
-        $configuration = $this->getFullConfiguration();
+        
+        $options = $this->getAllPossibleOptions();
 
         $encoder = $this->getMock('Symfony\Component\Serializer\Encoder\EncoderInterface');
         $encoder->expects($this->any())->method('supportsEncoding')->will($this->returnValue(true));
         $encoder->expects($this->any())->method('encode');
-        $serializer = new Serializer(array(), array($configuration->get('format') => $encoder));
+        $serializer = new Serializer(array(), array($options['format'] => $encoder));
 
         $adapter = $this->createMockAdapter();
         $adapter->expects($this->any())->method('send');
@@ -281,25 +273,24 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
             ->with($context)
         ;
 
-        $sender = new MailSender($adapter, $serializer, $configuration);
+        $sender = new MailSender($adapter, $serializer, $options);
         $sender->nextNode($nextChainNode);
         
         $sender->handle($context);
     }
 
     /**
-     * @return \BadaBoom\DataHolder\DataHolder
+     * @return array
      */
-    protected function getFullConfiguration()
+    protected function getAllPossibleOptions()
     {
-        $configuration = new DataHolder();
-        $configuration->set('format', 'html');
-        $configuration->set('sender', 'valid@sender.com');
-        $configuration->set('subject', 'It should be provided via SubjectProvider');
-        $configuration->set('recipients', array('john@doe.com'));
-        $configuration->set('headers', array('BB' => 'support@site.com'));
-
-        return $configuration;
+        return array(
+            'format' => 'html',
+            'sender' => 'valid@sender.com',
+            'subject' => 'It should be provided via SubjectProvider',
+            'recipients' => array('john@doe.com'),
+            'headers' => array('BB' => 'support@site.com'),
+        );
     }
 
     /**
@@ -311,12 +302,28 @@ class MailSenderTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     *
      * @return \PHPUnit_Framework_MockObject_MockObject
      */
     protected function createMockSerializer()
     {
         return $this->getMock('Symfony\Component\Serializer\Serializer');
+    }
+
+    /**
+     * @return \PHPUnit_Framework_MockObject_MockObject
+     */
+    protected function createSerializerStub()
+    {
+        $serializerStub = $this->createMockSerializer();
+        
+        $serializerStub
+            ->expects($this->any())
+            ->method('supportsEncoding')
+            ->with('supported')
+            ->will($this->returnValue(true))
+        ;
+        
+        return $serializerStub;
     }
 
     /**

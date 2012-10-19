@@ -2,9 +2,10 @@
 namespace BadaBoom\ChainNode\Sender;
 
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\OptionsResolver\Options;
+use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 
 use BadaBoom\Adapter\Mailer\MailerAdapterInterface;
-use BadaBoom\DataHolder\DataHolderInterface;
 use BadaBoom\Context;
 
 class MailSender extends AbstractSender
@@ -14,15 +15,30 @@ class MailSender extends AbstractSender
      *
      * @param \BadaBoom\Adapter\Mailer\MailerAdapterInterface $adapter
      * @param \Symfony\Component\Serializer\SerializerInterface $serializer
-     *
-     * @param \BadaBoom\DataHolder\DataHolderInterface $configuration
+     * @param array $options
      */
-    public function __construct(MailerAdapterInterface $adapter, SerializerInterface $serializer, DataHolderInterface $configuration)
+    public function __construct(MailerAdapterInterface $adapter, SerializerInterface $serializer, array $options)
     {
-        $this->validateSender($configuration->get('sender'));
-        $this->validateRecipients($configuration->get('recipients'));
-
-        parent::__construct($adapter, $serializer, $configuration);
+        parent::__construct($adapter, $serializer, $options);
+    }
+    
+    protected function getOptionResolver()
+    {
+        $resolver = parent::getOptionResolver();
+        
+        $resolver->setDefaults(array(
+            'subject' => null,
+            'headers' => array(),
+        ));
+        
+        $resolver->setRequired(array('sender', 'recipients'));
+        
+        $resolver->setNormalizers(array(
+            'sender' => $this->getSenderNormalizer(), 
+            'recipients' => $this->getRecipientsNormalizer(),
+        ));
+        
+        return $resolver;
     }
 
     /**
@@ -31,64 +47,56 @@ class MailSender extends AbstractSender
     public function handle(Context $context)
     {
         $this->adapter->send(
-            $this->configuration->get('sender'),
-            $this->configuration->get('recipients'),
-            $context->getVar('subject', $this->configuration->get('subject')),
+            $this->options['sender'],
+            $this->options['recipients'],
+            $context->getVar('subject', $this->options['subject']),
             $this->serialize($context),
-            $this->configuration->get('headers', array())
+            $this->options['headers']
         );
 
         $this->handleNextNode($context);
     }
 
     /**
-     * @throws \InvalidArgumentException If the sender does not fit in a mail format
-     *
-     * @param string $sender
-     *
-     * @return void
+     * @return \Closure
      */
-    protected function validateSender($sender)
+    protected function getSenderNormalizer()
     {
-        if (false == (is_string($sender) && $this->isValidMail($sender))) {
-            throw new \InvalidArgumentException('Given sender ' . var_export($sender, true) . ' is invalid');
-        }
-    }
-
-    /**
-     * @throws \InvalidArgumentException if recipients list is empty
-     * @throws \InvalidArgumentException if recipients list has at least one invalid recipient
-     *
-     * @param array $recipients
-     *
-     * @return void
-     */
-    protected function validateRecipients(array $recipients)
-    {
-        if (true == empty($recipients)) {
-            throw new \InvalidArgumentException('Recipients list should not be empty');
-        }
-
-        foreach ($recipients as $recipient) {
-            if (true == is_string($recipient) && $this->isValidMail($recipient)) {
-                continue;
+        return function(Options $options, $value) {
+            if (false == is_string($value)) {
+                throw new InvalidOptionsException('Given sender ' . var_export($value, true) . ' is not a string.');
             }
-
-            throw new \InvalidArgumentException(sprintf(
-                'Given recipients list %s has invalid recipient %s',
-                var_export($recipients, true),
-                var_export($recipient, true)
-            ));
-        }
+            if (false == preg_match('|([a-z0-9_\.\-]{1,20})@([a-z0-9\.\-]{1,20})\.([a-z]{2,4})|is', $value)) {
+                throw new InvalidOptionsException('Given sender ' . var_export($value, true) . ' is not a valid email.');
+            }
+            
+            return $value;
+        };
     }
 
     /**
-     * @param $mail
-     *
-     * @return boolean
+     * @return \Closure
      */
-    protected function isValidMail($mail)
+    protected function getRecipientsNormalizer()
     {
-        return preg_match('|([a-z0-9_\.\-]{1,20})@([a-z0-9\.\-]{1,20})\.([a-z]{2,4})|is', $mail) ? true : false;
+        return function(Options $options, $value) {
+            if (empty($value)) {
+                throw new InvalidOptionsException('Recipients list should not be empty.');
+            }
+            if (false == is_array($value)) {
+                $value = array($value);
+            }
+            
+            foreach ($value as $recipient) {
+                if (false == is_string($recipient)) {
+                    throw new InvalidOptionsException('Given recipient ' . var_export($recipient, true) . ' is not a string.');
+                }
+                if (false == preg_match('|([a-z0-9_\.\-]{1,20})@([a-z0-9\.\-]{1,20})\.([a-z]{2,4})|is', $recipient)) {
+                    throw new InvalidOptionsException('Given recipient ' . var_export($recipient, true) . ' is not a valid email.');
+                }
+            }
+            
+            return $value;
+        };
     }
 }

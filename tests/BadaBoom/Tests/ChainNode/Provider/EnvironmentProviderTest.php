@@ -1,17 +1,17 @@
 <?php
 namespace BadaBoom\Tests\ChainNode\Provider;
 
-use BadaBoom\ChainNode\Provider\SessionProvider;
+use BadaBoom\ChainNode\Provider\EnvironmentProvider;
 use BadaBoom\Context;
 
-class SessionProviderTest extends \PHPUnit_Framework_TestCase
+class EnvironmentProviderTest extends \PHPUnit_Framework_TestCase
 {
     /**
      * @test
      */
     public function shouldBeSubclassOfAbstractProvider()
     {
-        $rc = new \ReflectionClass('BadaBoom\ChainNode\Provider\SessionProvider');
+        $rc = new \ReflectionClass('BadaBoom\ChainNode\Provider\EnvironmentProvider');
         $this->assertTrue($rc->isSubclassOf('BadaBoom\ChainNode\Provider\AbstractProvider'));
     }
 
@@ -22,10 +22,10 @@ class SessionProviderTest extends \PHPUnit_Framework_TestCase
     {
         $context = new Context(new \Exception);
 
-        $provider = new SessionProvider();
+        $provider = new EnvironmentProvider();
         $provider->handle($context);
 
-        $this->assertTrue($context->hasVar('session'));
+        $this->assertTrue($context->hasVar('env'));
     }
 
     /**
@@ -37,43 +37,28 @@ class SessionProviderTest extends \PHPUnit_Framework_TestCase
 
         $expectedCustomSectionName = 'custom_section_name';
 
-        $provider = new SessionProvider($expectedCustomSectionName);
+        $provider = new EnvironmentProvider($expectedCustomSectionName);
         $provider->handle($context);
 
         $this->assertTrue($context->hasVar($expectedCustomSectionName));
-        $this->assertFalse($context->hasVar('session'));
+        $this->assertFalse($context->hasVar('env'));
     }
 
     /**
      * @test
      */
-    public function shouldFillContextWithEmptyArrayIfGlobalSessionArrayNotDefinied()
+    public function shouldFillContextWithGlobalEnvArray()
     {
-        unset($_SESSION);
+        $_ENV = array(
+            'foo' => 'bar'
+        );
 
         $context = new Context(new \Exception);
 
-        $provider = new SessionProvider();
+        $provider = new EnvironmentProvider();
         $provider->handle($context);
 
-        $this->assertEquals(array(), $context->getVar('session'));
-    }
-
-    /**
-     * @test
-     */
-    public function shouldFillContextWithGlobalSessionArray()
-    {
-        $_SESSION = array();
-        $_SESSION['foo'] = 'foo';
-        $_SESSION['bar'] = 1;
-
-        $context = new Context(new \Exception);
-
-        $provider = new SessionProvider();
-        $provider->handle($context);
-
-        $this->assertEquals($_SESSION, $context->getVar('session'));
+        $this->assertEquals($_ENV, $context->getVar('env'));
     }
 
     /**
@@ -90,7 +75,7 @@ class SessionProviderTest extends \PHPUnit_Framework_TestCase
             ->with($context)
         ;
 
-        $provider = new SessionProvider();
+        $provider = new EnvironmentProvider();
         $provider->nextNode($nextChainNode);
 
         $provider->handle($context);

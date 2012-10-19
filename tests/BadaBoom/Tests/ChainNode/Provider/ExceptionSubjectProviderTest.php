@@ -46,7 +46,7 @@ class ExceptionSubjectProviderTestCase extends \PHPUnit_Framework_TestCase
     /**
      * @test
      */
-    public function shouldFillDataHolderWithSubject()
+    public function shouldFillContextWithSubject()
     {
         $exception = new \Exception('foo');
         $context = new Context($exception);

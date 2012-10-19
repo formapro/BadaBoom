@@ -47,7 +47,7 @@ class ExceptionStackTraceProviderTest extends \PHPUnit_Framework_TestCase
      *
      * @test
      */
-    public function shouldFillDataHolderWithExceptionStackTrace()
+    public function shouldFillContextWithExceptionStackTrace()
     {
         $context = new Context(new \Exception('foo'));
 
