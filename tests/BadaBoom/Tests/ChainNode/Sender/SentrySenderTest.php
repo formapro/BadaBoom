@@ -3,7 +3,7 @@
 namespace BadaBoom\Tests\ChainNode\Sender;
 
 use BadaBoom\ChainNode\Sender\SentrySender;
-use BadaBoom\DataHolder\DataHolder;
+use BadaBoom\Context;
 
 class SentrySenderTest extends \PHPUnit_Framework_TestCase
 {
@@ -29,8 +29,8 @@ class SentrySenderTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldRunCaptureExceptionMethodOnce()
     {
-        $exception = new \Exception();
-        $data = new DataHolder();
+        $context = new Context(new \Exception());
+        $exception = $context->getException();
 
         $ravenClientMock = $this->getRavenClientMock();
         $ravenClientMock->expects($this->once())
@@ -46,10 +46,10 @@ class SentrySenderTest extends \PHPUnit_Framework_TestCase
 
         $senderMock->expects($this->once())
             ->method('handleNextNode')
-            ->with($this->identicalTo($exception), $this->identicalTo($data))
+            ->with($this->identicalTo($context))
         ;
 
-        $senderMock->handle($exception, $data);
+        $senderMock->handle($context);
     }
 
     protected function getRavenClientMock()

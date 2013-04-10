@@ -2,7 +2,7 @@
 namespace BadaBoom\ChainNode\Sender;
 
 use BadaBoom\ChainNode\AbstractChainNode;
-use BadaBoom\DataHolder\DataHolderInterface;
+use BadaBoom\Context;
 
 class SentrySender extends AbstractChainNode
 {
@@ -22,10 +22,10 @@ class SentrySender extends AbstractChainNode
     /**
      * {@inheritdoc}
      */
-    public function handle(\Exception $exception, DataHolderInterface $data)
+    public function handle(Context $context)
     {
-        $this->client->captureException($exception);
+        $this->client->captureException($context->getException());
 
-        $this->handleNextNode($exception, $data);
+        $this->handleNextNode($context);
     }
 }

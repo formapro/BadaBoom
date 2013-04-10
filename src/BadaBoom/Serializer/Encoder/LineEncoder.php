@@ -48,7 +48,7 @@ class LineEncoder implements EncoderInterface, NormalizationAwareInterface
     /**
      * {@inheritdoc}
      */
-    public function encode($data, $format)
+    public function encode($data, $format, array $context = array())
     {
         if (false == $data instanceof Context) {
             throw new UnsupportedException(sprintf(
