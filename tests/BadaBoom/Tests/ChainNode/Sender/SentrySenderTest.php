@@ -7,10 +7,17 @@ use BadaBoom\Context;
 
 class SentrySenderTest extends \PHPUnit_Framework_TestCase
 {
+    protected function setUp()
+    {
+        if (false == class_exists('Raven_Client')) {
+            $this->markTestSkipped('The Raven Client is not available.');
+        }
+    }
+
     /**
      * @test
      */
-    public function shouldBeSubclassOfAbstractSender()
+    public function shouldBeSubclassOfAbstractChainNode()
     {
         $rc = new \ReflectionClass('BadaBoom\ChainNode\Sender\SentrySender');
         $this->assertTrue($rc->isSubclassOf('BadaBoom\ChainNode\AbstractChainNode'));
@@ -21,39 +28,48 @@ class SentrySenderTest extends \PHPUnit_Framework_TestCase
      */
     public function couldBeConstructedWithRavenClientArgument()
     {
-        new SentrySender($this->getRavenClientMock());
+        new SentrySender($this->createRavenClientMock());
     }
 
     /**
      * @test
      */
-    public function shouldRunCaptureExceptionMethodOnce()
+    public function shouldCaptureExceptionAndDelegateHandlingToNextChainNode()
     {
         $context = new Context(new \Exception());
         $exception = $context->getException();
 
-        $ravenClientMock = $this->getRavenClientMock();
+        $ravenClientMock = $this->createRavenClientMock();
         $ravenClientMock->expects($this->once())
             ->method('captureException')
             ->with($this->identicalTo($exception))
         ;
 
-        $senderMock = $this->getMock(
-            '\BadaBoom\ChainNode\Sender\SentrySender',
-            array('handleNextNode'),
-            array($ravenClientMock)
-        );
-
-        $senderMock->expects($this->once())
-            ->method('handleNextNode')
-            ->with($this->identicalTo($context))
+        $nextChainNode = $this->createMockChainNode();
+        $nextChainNode
+            ->expects($this->once())
+            ->method('handle')
+            ->with($context)
         ;
 
-        $senderMock->handle($context);
+        $sender = new SentrySender($ravenClientMock);
+        $sender->nextNode($nextChainNode);
+        $sender->handle($context);
     }
 
-    protected function getRavenClientMock()
+    /**
+     * @return \PHPUnit_Framework_MockObject_MockObject
+     */
+    protected function createRavenClientMock()
     {
         return $this->getMock('Raven_Client');
+    }
+
+    /**
+     * @return \PHPUnit_Framework_MockObject_MockObject
+     */
+    protected function createMockChainNode()
+    {
+        return $this->getMockForAbstractClass('BadaBoom\ChainNode\AbstractChainNode');
     }
 }
