@@ -9,7 +9,7 @@ class TextEncoder implements EncoderInterface
     /**
      * {@inheritdoc}
      */
-    public function encode($data, $format, array $context = array())
+    public function encode($data, $format)
     {
         $text = '';
         foreach ($data as $key => $value) {
