@@ -34,9 +34,9 @@ class CallbackChainNodeTest extends \PHPUnit_Framework_TestCase
      */
     public function couldBeConstructedWithFlagForProcessingNextNode()
     {
-        new CallbackChainNode(function(){}, $handleNextNode = false);
+        new CallbackChainNode(function(){}, $shouldHandleNextNode = false);
 
-        new CallbackChainNode(function(){}, $handleNextNode = true);
+        new CallbackChainNode(function(){}, $shouldHandleNextNode = true);
     }
 
     /**
@@ -79,7 +79,7 @@ class CallbackChainNodeTest extends \PHPUnit_Framework_TestCase
 
         $nextNode = $this->createChainNodeMock();
 
-        $node = new CallbackChainNode(function() {}, $handleNextNode = true);
+        $node = new CallbackChainNode(function() {}, $shouldHandleNextNode = true);
         $node->nextNode($nextNode);
 
         $nextNode
@@ -102,7 +102,7 @@ class CallbackChainNodeTest extends \PHPUnit_Framework_TestCase
             ->method('handle')
         ;
 
-        $node = new CallbackChainNode(function() {}, $handleNextNode = false);
+        $node = new CallbackChainNode(function() {}, $shouldHandleNextNode = false);
 
         $node->nextNode($nextNode);
 
