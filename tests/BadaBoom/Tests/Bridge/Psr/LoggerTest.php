@@ -2,9 +2,8 @@
 namespace BadaBoom\Tests\Bridge\Psr;
 
 use BadaBoom\Bridge\Psr\Logger;
-use BadaBoom\ChainNode\ChainNodeInterface;
-
 use BadaBoom\Context;
+
 use Psr\Log\InvalidArgumentException;
 use Psr\Log\LogLevel;
 

@@ -2,8 +2,8 @@
 namespace BadaBoom\Bridge\Psr;
 
 use BadaBoom\ChainNode\ChainNodeInterface;
-
 use BadaBoom\Context;
+
 use Psr\Log\AbstractLogger;
 use Psr\Log\InvalidArgumentException;
 
@@ -23,9 +23,13 @@ class Logger extends AbstractLogger
     }
 
     /**
-     * @param mixed $level
-     * @param string $message
+     * Process given exception and context using all preregistered chains of handlers
+     *
+     * @param string $level
+     * @param \Exception|string $message
      * @param array $context
+     *
+     * @return null|void
      *
      * @throws InvalidArgumentException
      */
@@ -64,7 +68,7 @@ class Logger extends AbstractLogger
      *
      * @return string
      */
-    private function prepareMessage($message, array $vars = array())
+    protected function prepareMessage($message, array $vars = array())
     {
         if (is_string($message)) {
             return $this->replaceVariables($message, $vars);
@@ -87,7 +91,7 @@ class Logger extends AbstractLogger
      *
      * @return string
      */
-    private function replaceVariables($text, array $vars = array())
+    protected function replaceVariables($text, array $vars = array())
     {
         $replace = array();
 
