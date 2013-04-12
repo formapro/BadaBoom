@@ -18,20 +18,20 @@ class CallbackChainNode extends AbstractChainNode
     /**
      * @var boolean
      */
-    protected $handleNextNode;
+    protected $shouldHandleNextNode;
 
     /**
-     * @param Callable|Closure $callback
-     * @param boolean $handleNextNode
+     * @param \Closure $callback
+     * @param boolean $shouldHandleNextNode
      */
-    public function __construct($callback, $handleNextNode = true)
+    public function __construct($callback, $shouldHandleNextNode = true)
     {
         if (false == is_callable($callback)) {
             throw new \InvalidArgumentException('Invalid callable provided');
         }
 
         $this->callback = $callback;
-        $this->handleNextNode = $handleNextNode;
+        $this->shouldHandleNextNode = $shouldHandleNextNode;
     }
 
     /**
@@ -41,7 +41,7 @@ class CallbackChainNode extends AbstractChainNode
     {
         call_user_func_array($this->callback, array($context));
 
-        if ($this->handleNextNode) {
+        if ($this->shouldHandleNextNode) {
             $this->handleNextNode($context);
         }
     }
