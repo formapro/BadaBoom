@@ -131,7 +131,7 @@ class LoggerTest extends \PHPUnit_Framework_TestCase
         $exceptionAsMessage = new \Exception('Exception 1');
         $exceptionInContext = new \Exception('Exception 2');
         $messageString = 'sting message';
-        $messageObject = new classWithToString();
+        $messageObject = new ClassWithToString();
         $messageObjectWithoutToString = new \stdClass();
 
         $logger->log('warning', $exceptionAsMessage, array('exception' => $exceptionInContext));
@@ -181,7 +181,7 @@ class LoggerTest extends \PHPUnit_Framework_TestCase
 
         $logger->log('warning', 'Hello {user} {name} {age} {$illegalVar} {legal_VAR.1} {exists}', array(
             'user' => 'TestUser',
-            'name' => new classWithToString(),
+            'name' => new ClassWithToString(),
             'age' => 99,
             'legal_VAR.1' => 'LEGAL',
             'illegal var' => 'NOT LEGAL',
@@ -241,7 +241,7 @@ class LoggerTest extends \PHPUnit_Framework_TestCase
     }
 }
 
-class classWithToString
+class ClassWithToString
 {
     public function __toString() {
         return 'Object with to string';
