@@ -13,6 +13,7 @@ class ContextNormalizer implements NormalizerInterface
      */
     public function normalize($data, $format = null)
     {
+        /** @var $data Context */
         if (false == $this->supportsNormalization($data, $format)) {
             throw new UnsupportedException(sprintf(
                 'Normalization of %s to format %s is not supported by this normalizer.',
@@ -22,7 +23,7 @@ class ContextNormalizer implements NormalizerInterface
         }
 
         $result = array();
-        foreach ($data as $key => $value) {
+        foreach ($data->getVars() as $key => $value) {
             if (is_array($value)) {
                 $result[$key] = $this->normalizeArray($value);
             } else if (is_object($value)) {

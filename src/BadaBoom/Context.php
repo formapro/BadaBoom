@@ -5,7 +5,7 @@ namespace BadaBoom;
  * @author Kotlyar Maksim <kotlyar.maksim@gmail.com>
  * @since 10/11/12
  */
-class Context implements \IteratorAggregate 
+class Context 
 {
     /**
      * @var \Exception
