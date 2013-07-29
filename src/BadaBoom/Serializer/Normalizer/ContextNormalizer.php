@@ -11,7 +11,7 @@ class ContextNormalizer implements NormalizerInterface
     /**
      * {@inheritdoc}
      */
-    public function normalize($data, $format = null)
+    public function normalize($data, $format = null, array $context = array())
     {
         /** @var $data Context */
         if (false == $this->supportsNormalization($data, $format)) {
