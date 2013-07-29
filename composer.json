@@ -17,7 +17,7 @@
     ],
     "require": {
         "php": ">=5.3.2",
-        "symfony/serializer": ">=2.0.6,<2.2-dev",
+        "symfony/serializer": "~2.2",
         "psr/log": "1.0.*"
     },
     "require-dev": {
